@@ -4,6 +4,7 @@ use NeuroCheckout\Community\SourcePullGateway;
 use NeuroCheckout\Community\ReconciledSourceExporter;
 use NeuroCheckout\Community\PrestashopSourceSnapshot;
 use NeuroCheckout\Community\AutomaticSourceBinding;
+use NeuroCheckout\Community\PrestashopSourceDirectory;
 use NeuroCheckout\Security\SecretConfiguration;
 
 /** Dedicated, disabled-by-default staging endpoint; never uses the Cloud API key. */
@@ -28,6 +29,20 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
                     'secret' => AutomaticSourceBinding::secret($apiKey, $shopId), 'shopId' => $shopId];
             }
         }
+        $directory = null;
+        if ($automatic !== null) {
+            try {
+                $directory = PrestashopSourceDirectory::resolve(_PS_ROOT_DIR_,
+                    rtrim(defined('_PS_CACHE_DIR_') ? _PS_CACHE_DIR_ : sys_get_temp_dir(), '/\\')
+                    . '/neurocheckout-community-source');
+            } catch (\Throwable $error) {
+                http_response_code(503);
+                header('Content-Type: application/json');
+                header('Cache-Control: no-store');
+                echo '{"error":"source_unavailable"}';
+                exit;
+            }
+        }
         [$status, $headers, $body] = SourcePullGateway::handle(
             'prestashop', (int) $this->context->shop->id, _PS_ROOT_DIR_,
             (string) ($_SERVER['REQUEST_METHOD'] ?? ''), (string) ($_SERVER['REQUEST_URI'] ?? ''),
@@ -38,8 +53,7 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
                     return PrestashopSourceSnapshot::fromRuntime()->capture($scope);
                 });
                 return $exporter->page($input);
-            }, $automatic, rtrim(defined('_PS_CACHE_DIR_') ? _PS_CACHE_DIR_ : sys_get_temp_dir(), '/\\')
-                . '/neurocheckout-community-source'
+            }, $automatic, $directory
         );
         http_response_code($status);
         foreach ($headers as $name => $value) { header($name . ': ' . $value); }

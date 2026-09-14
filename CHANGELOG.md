@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.6.3
+
+- Keep Community synchronization state in `var/neurocheckout-community-source`,
+  outside the disposable PrestaShop cache and the module installation directory.
+- Automatically move existing state without resetting streams, cursors, pending
+  records, revision counters or replay protection. A busy source is retried safely.
+- Refuse to silently reinitialize a previously initialized durable state directory
+  if it goes missing. Include this directory in store backups.
+
 ## 4.6.2
 
 - Export native checkout totals, tax-exclusive totals, unit prices and line totals
