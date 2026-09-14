@@ -7,7 +7,7 @@ NeuroCheckout Community.
 
 ## Download
 
-The connector compatible with NeuroCheckout Community `v0.1.0-preview.7` is
+The connector compatible with NeuroCheckout Community `v0.1.0-preview.8` is
 `v4.6.0-preview.1`:
 
 - [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.0-preview.1/neurocheckoutconnector-prestashop-4.6.0-preview.1.zip)
