@@ -23,6 +23,7 @@ use NeuroCheckout\Infrastructure\CustomerJourneyEventRepository;
 use NeuroCheckout\Infrastructure\TelemetryEventRepository;
 use NeuroCheckout\Security\EndpointPolicy;
 use NeuroCheckout\Security\SecretConfiguration;
+use NeuroCheckout\Http\SecureHttpClient;
 
 class NeuroCheckoutConnector extends Module
 {
@@ -56,7 +57,7 @@ class NeuroCheckoutConnector extends Module
     {
         $this->name = 'neurocheckoutconnector';
         $this->tab = 'analytics_stats';
-        $this->version = '4.6.0';
+        $this->version = '4.6.1';
         $this->author = 'NeuroCheckout';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -3156,6 +3157,9 @@ class NeuroCheckoutConnector extends Module
     {
         $saveConfigSubmitted = false;
 
+        $this->refreshConnectorUpdateStatus();
+        $updateNotice = $this->renderConnectorUpdateNotice();
+
         if ($this->isBackOfficeAjaxAction('saveConfig')) {
             $this->ajaxProcessSaveConfig();
         }
@@ -3197,10 +3201,53 @@ class NeuroCheckoutConnector extends Module
             )
         ]);
 
-        return $this->display(
+        return $updateNotice . $this->display(
             __FILE__,
             'views/templates/admin/configuration_agents.tpl'
         );
+    }
+
+    private function refreshConnectorUpdateStatus(): void
+    {
+        $lastChecked = (int) Configuration::get('NC_CONNECTOR_UPDATE_CHECKED_AT');
+        if ($lastChecked > 0 && (time() - $lastChecked) < 86400) {
+            return;
+        }
+        Configuration::updateValue('NC_CONNECTOR_UPDATE_CHECKED_AT', time());
+        try {
+            $result = (new SecureHttpClient())->checkConnectorVersion($this->version);
+            if (empty($result['success']) || !is_string($result['body'] ?? null)) {
+                return;
+            }
+            $payload = json_decode($result['body'], true);
+            if (!is_array($payload) || ($payload['platform'] ?? '') !== 'prestashop') {
+                return;
+            }
+            $releaseUrl = trim((string) ($payload['release_url'] ?? ''));
+            if (strpos($releaseUrl, 'https://github.com/pisob/neurocheckout-connector-prestashop/releases') !== 0) {
+                return;
+            }
+            Configuration::updateValue('NC_CONNECTOR_UPDATE_STATUS', (string) ($payload['status'] ?? 'current'));
+            Configuration::updateValue('NC_CONNECTOR_LATEST_VERSION', (string) ($payload['latest_version'] ?? $this->version));
+            Configuration::updateValue('NC_CONNECTOR_RELEASE_URL', $releaseUrl);
+        } catch (\Throwable $e) {
+            PrestaShopLogger::addLog('[NC] Connector version check failed: ' . $e->getMessage(), 2);
+        }
+    }
+
+    private function renderConnectorUpdateNotice(): string
+    {
+        $status = trim((string) Configuration::get('NC_CONNECTOR_UPDATE_STATUS'));
+        if (!in_array($status, ['available', 'required', 'blocked'], true)) {
+            return '';
+        }
+        $latest = htmlspecialchars((string) Configuration::get('NC_CONNECTOR_LATEST_VERSION'), ENT_QUOTES, 'UTF-8');
+        $url = htmlspecialchars((string) Configuration::get('NC_CONNECTOR_RELEASE_URL'), ENT_QUOTES, 'UTF-8');
+        $message = 'NeuroCheckout Connector ' . $latest . ' is available. Back up your store, download the official release, then upload it over this installed module. Do not uninstall the existing module; its configuration and data will be preserved.';
+        if ($url !== '') {
+            $message .= ' <a href="' . $url . '" target="_blank" rel="noopener noreferrer">Download official update</a>';
+        }
+        return $status === 'available' ? $this->displayWarning($message) : $this->displayError($message);
     }
 
     private function getDefaultShopCurrencyCode(): string
