@@ -7,27 +7,29 @@ namespace NeuroCheckout\Community;
 use PDO;
 use RuntimeException;
 
-/** Read-only native snapshot for small staging stores. Never invokes cart hooks. */
+/** Transactional native rows enriched with checkout amounts in the store runtime. */
 final class PrestashopSourceSnapshot
 {
     private PDO $db;
     private string $prefix;
     private float $started = 0;
+    private $amountReader;
     private const TABLES = ['shop', 'product', 'product_shop', 'product_lang', 'product_attribute',
         'product_attribute_shop', 'stock_available', 'category_product', 'cart', 'cart_product', 'customer', 'currency', 'orders'];
 
-    public function __construct(PDO $connection, string $prefix)
+    public function __construct(PDO $connection, string $prefix, ?callable $amountReader = null)
     {
         if (!preg_match('/^[A-Za-z0-9_]+$/D', $prefix) || $connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
             throw new RuntimeException('source_unavailable');
         }
         $this->db = $connection; $this->prefix = $prefix;
+        $this->amountReader = $amountReader;
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         $this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
     }
 
-    public static function fromRuntime(): self
+    public static function fromRuntime(?callable $amountReader = null): self
     {
         // A separate connection avoids committing/rolling back any framework
         // transaction, and avoids ORM side effects such as recalculating carts.
@@ -42,7 +44,8 @@ final class PrestashopSourceSnapshot
         } else { $target = 'host=' . $host; }
         return new self(new PDO('mysql:' . $target . ';dbname=' . $name . ';charset=utf8mb4',
             (string) _DB_USER_, (string) _DB_PASSWD_, [PDO::ATTR_TIMEOUT => 2,
-                PDO::MYSQL_ATTR_MULTI_STATEMENTS => false]), (string) _DB_PREFIX_);
+                PDO::MYSQL_ATTR_MULTI_STATEMENTS => false]), (string) _DB_PREFIX_,
+            $amountReader ?? [PrestashopCartAmounts::class, 'capture']);
     }
 
     public function capture(int $scope): array
@@ -107,6 +110,20 @@ final class PrestashopSourceSnapshot
                     if ((int) $order['id_shop'] !== $scope) { throw new RuntimeException('source_scope_inconsistent'); }
                 }
                 $cart['status'] = $cart['orders'] ? 'converted' : ($cart['items'] ? 'active' : 'empty');
+                if ($cart['status'] === 'active' && $this->amountReader !== null) {
+                    try {
+                        $cart = array_replace($cart, ($this->amountReader)($cart, $scope));
+                        $cart['amount_status'] = 'ready';
+                    } catch (\Throwable $error) {
+                        // One unpriceable historical cart must not hide new carts or conversions.
+                        // Never export exception text, addresses, or a fabricated zero amount.
+                        $cart['amount_status'] = in_array($error->getMessage(),
+                            ['source_amounts_changed', 'source_amounts_ambiguous', 'source_amounts_invalid'], true)
+                            ? $error->getMessage() : 'source_amounts_unavailable';
+                    }
+                } elseif ($cart['status'] === 'empty') {
+                    $cart['cart_total'] = '0.000000';
+                }
                 $result[] = $this->record('cart', $id, $cart);
             }
             if (microtime(true) - $this->started > 5) { throw new RuntimeException('source_snapshot_timeout'); }
