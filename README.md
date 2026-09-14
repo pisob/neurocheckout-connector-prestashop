@@ -7,11 +7,11 @@ NeuroCheckout Community.
 
 ## Download
 
-The connector compatible with NeuroCheckout Community `v0.1.0-preview.8` is
-`v4.6.0-preview.1`:
+The connector compatible with NeuroCheckout Community `v0.1.0-preview.9` is
+`v4.6.1`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.0-preview.1/neurocheckoutconnector-prestashop-4.6.0-preview.1.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.0-preview.1)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.1/neurocheckoutconnector-prestashop-4.6.1.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.1)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
@@ -44,7 +44,7 @@ and the ZIP checksum reports `OK`.
 1. Back up the store and database.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.0-preview.1.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.1.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store
@@ -58,6 +58,19 @@ and the ZIP checksum reports `OK`.
 Never publish connector keys, customer records, cart contents or configuration
 exports in an issue or pull request. Back up the store before uninstalling or
 upgrading the module.
+
+## Updates
+
+The connector checks its version through the existing authenticated Cloud
+connection at most once every 24 hours. When an update is available, its
+configuration page displays the exact official GitHub release. The Cloud never
+downloads files to the store and cannot install an update.
+
+Back up the store, download the official module ZIP, then use **Module Manager →
+Upload a module** without uninstalling the existing module. PrestaShop performs
+an in-place upgrade because the technical module name remains
+`neurocheckoutconnector`. Versioned upgrade scripts preserve connector tables,
+credentials, settings and queued records. Never uninstall before upgrading.
 
 ## Development
 

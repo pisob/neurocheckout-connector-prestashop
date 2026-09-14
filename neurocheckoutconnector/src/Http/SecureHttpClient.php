@@ -20,6 +20,30 @@ class SecureHttpClient
     const COMPACT_V4      = 4;
     const COMPACT_V3      = 3;
 
+    public function checkConnectorVersion(string $version): array
+    {
+        $endpoint = EndpointPolicy::normalize(trim((string) Configuration::get('NC_API_ENDPOINT')));
+        $apiKey = $this->resolveApiKeyForRequest();
+        if ($endpoint === null || $apiKey === '') {
+            return $this->errorResponse(0, 'API configuration missing');
+        }
+        $body = json_encode([
+            'platform' => 'prestashop',
+            'connector_version' => $version,
+        ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        $timestamp = (string) time();
+        $nonce = bin2hex(random_bytes(16));
+        $headers = [
+            'Content-Type: application/json',
+            'X-API-Key: ' . $apiKey,
+            'X-Neuro-Timestamp: ' . $timestamp,
+            'X-Neuro-Nonce: ' . $nonce,
+            'X-Neuro-Signature: ' . hash_hmac('sha256', $timestamp . '.' . $nonce . '.' . $body, $apiKey),
+            'X-Neuro-Version: 7',
+        ];
+        return $this->executeCurl($endpoint . '/api/v1/connectors/version-check', $body, $headers);
+    }
+
     /* ============================================================
      * SEND ENTRY POINT
      * ============================================================ */
