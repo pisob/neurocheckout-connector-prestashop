@@ -1,60 +1,90 @@
-# NeuroCheckout Connector — PrestaShop
+# NeuroCheckout Connector for PrestaShop
 
-Dépôt officiel : https://github.com/pisob/neurocheckout-connector-prestashop
+This is the official open-source PrestaShop connector for NeuroCheckout. It
+sends authenticated store events to NeuroCheckout Cloud and provides signed,
+read-only product and cart snapshots to the encrypted local vault in
+NeuroCheckout Community.
 
-## Statut : préversion staging signée
+## Download
 
-La série `v4.6.0-preview.*` est destinée à la validation avec NeuroCheckout
-Community `v0.1.0-preview.7` et le Cloud staging. Elle ne doit pas être connectée
-à la production. Installer uniquement une archive officielle signée, jamais la
-branche `main` directement.
+The connector compatible with NeuroCheckout Community `v0.1.0-preview.8` is
+`v4.6.0-preview.1`:
 
-Les agents, décisions, workers, quotas et envois d'emails restent dans
-NeuroCheckout Cloud, dont le code n'est pas inclus ici. Community est
-l'interface auto-hébergée, pas un moteur Cloud autonome.
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.0-preview.1/neurocheckoutconnector-prestashop-4.6.0-preview.1.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.0-preview.1)
 
-Après un test API staging réussi, le connecteur expose automatiquement à
-Community l'instantané signé des produits et paniers de la boutique courante.
-Le secret dédié est dérivé de la clé connecteur existante : aucun second secret,
-fichier serveur ou accès SSH n'est demandé à l'utilisateur. Les données complètes
-restent dans le coffre local chiffré de Community ; seuls des signaux minimisés
-sont relayés vers le Cloud.
+Do not use **Code → Download ZIP**. That archive contains the complete source
+repository and is not an installable PrestaShop module. Do not extract the
+official module ZIP before uploading it to PrestaShop.
 
-## Installation et environnement de test
+## Verify the download
 
-Le module se trouve dans `neurocheckoutconnector/`. Le dossier racine du dépôt n'est pas un ZIP installable dans PrestaShop.
+Download `SHA256SUMS`, `SHA256SUMS.asc` and `RELEASE-PUBLIC-KEY.asc` from the
+same release. In your download directory, run:
 
-Préférer les futurs paquets officiellement signés pour une installation utilisateur.
-Ne jamais désinstaller sans sauvegarder la base et la configuration : les données
-locales propres au connecteur et certains liens de récupération peuvent être perdus.
-Aucune boutique n'est modifiée par la publication de ce dépôt.
+```bash
+verification_home="$(mktemp -d)"
+chmod 700 "${verification_home}"
+GNUPGHOME="${verification_home}" gpg --batch --import RELEASE-PUBLIC-KEY.asc
+GNUPGHOME="${verification_home}" gpg --batch --fingerprint \
+  9E34837186C1946ED7477987D7151C307080415D
+GNUPGHOME="${verification_home}" gpg --batch --verify SHA256SUMS.asc SHA256SUMS
+sha256sum --check SHA256SUMS
+find "${verification_home}" -depth -delete
+unset verification_home
+```
 
-Utiliser uniquement une clé API connecteur émise pour la boutique et
-l'environnement sélectionnés ; le Client ID OAuth Community n'est pas cette clé.
-Ne jamais committer de clés, données clients, fichiers .env ou exports de base.
-Vérifier les consentements et les paramètres de données avant connexion au Cloud.
+Continue only if the fingerprint is
+`9E34 8371 86C1 946E D747 7987 D715 1C30 7080 415D`, GnuPG reports a good
+signature from `NeuroCheckout Connector Release <contact@neurocheckout.com>`,
+and the ZIP checksum reports `OK`.
 
-## Validation
+## Install in PrestaShop
+
+1. Back up the store and database.
+2. Open **Modules → Module Manager** in the PrestaShop back office.
+3. Select **Upload a module**.
+4. Upload `neurocheckoutconnector-prestashop-4.6.0-preview.1.zip` without
+   extracting it.
+5. Wait for installation to finish, then select **Configure**.
+6. Enter the API endpoint, store-specific connector key and exact external store
+   ID displayed in your NeuroCheckout account.
+7. Save the configuration and select **Test API**. Event processing starts only
+   after this test succeeds.
+8. Keep NeuroCheckout Community online. Its encrypted local synchronization is
+   configured automatically; no additional secret, server file or SSH access is
+   required.
+
+Never publish connector keys, customer records, cart contents or configuration
+exports in an issue or pull request. Back up the store before uninstalling or
+upgrading the module.
+
+## Development
+
+The module source is located in `neurocheckoutconnector/`.
 
 ```bash
 python3 tools/validate.py
 ```
 
-Ces contrôles exécutent le lint PHP et des tests isolés avec données synthétiques.
-Ils ne remplacent pas les tests d'installation, migration, cron, achat, rotation
-de clé et désinstallation sur les versions réelles de PrestaShop.
-Les contrôles CI ne disposent d'aucun secret staging ou production.
+The validation suite checks PHP syntax, endpoint policy, secret handling, HMAC
+authentication, replay protection and Community source synchronization using
+synthetic data. Platform-level installation and checkout tests should also be
+completed before adopting a preview release.
 
-## Contributions et releases
+## Contributions and releases
 
-Les contributions externes ne sont pas encore ouvertes. Voir [CONTRIBUTING.md](CONTRIBUTING.md).
-Les releases exigent une validation manuelle, des tests staging, un checksum et
-une signature vérifiable ; aucun workflow de publication automatique n'est fourni.
-Voir [RELEASING.md](RELEASING.md) et [SECURITY.md](SECURITY.md).
+Submit changes through pull requests. Protected branches require automated
+validation and maintainer review. External contributions cannot publish official
+releases or access NeuroCheckout credentials.
 
-## Licence et marque
+Official releases are created from reviewed commits and include a signed tag,
+SHA-256 checksums and a detached signature. See
+[CONTRIBUTING.md](CONTRIBUTING.md), [RELEASING.md](RELEASING.md) and
+[SECURITY.md](SECURITY.md).
 
-Code du connecteur : **Apache-2.0**, voir [LICENSE](LICENSE).
-Les notices tierces sont conservées. Cette licence ne transfère pas les droits
-sur la marque NeuroCheckout et ne donne pas accès au code privé du Cloud.
-Une copie modifiée ne doit pas être présentée comme une version officielle.
+## License and trademark
+
+The connector source is licensed under Apache License 2.0. The NeuroCheckout
+name and logos remain protected. Modified distributions must not claim to be
+official NeuroCheckout releases.
