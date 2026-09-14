@@ -2,20 +2,23 @@
 
 Dépôt officiel : https://github.com/pisob/neurocheckout-connector-prestashop
 
-## Statut : sources de développement, pas une release stable
+## Statut : préversion staging signée
 
-Ce premier dépôt public rend le code consultable. Il ne constitue pas une
-certification de sécurité ni une nouvelle version installable en production.
-Aucune release signée du connecteur n'est publiée à cette étape.
-Ne pas utiliser automatiquement la branche main comme canal de mise à jour.
+La série `v4.6.0-preview.*` est destinée à la validation avec NeuroCheckout
+Community `v0.1.0-preview.7` et le Cloud staging. Elle ne doit pas être connectée
+à la production. Installer uniquement une archive officielle signée, jamais la
+branche `main` directement.
 
 Les agents, décisions, workers, quotas et envois d'emails restent dans
 NeuroCheckout Cloud, dont le code n'est pas inclus ici. Community est
 l'interface auto-hébergée, pas un moteur Cloud autonome.
 
-Le pilote de stockage local produits/paniers est **désactivé par défaut**.
-Sa validation de bout en bout reste incomplète ; le parcours Cloud existant
-reste utilisé. Publier ces sources n'active pas ce pilote.
+Après un test API staging réussi, le connecteur expose automatiquement à
+Community l'instantané signé des produits et paniers de la boutique courante.
+Le secret dédié est dérivé de la clé connecteur existante : aucun second secret,
+fichier serveur ou accès SSH n'est demandé à l'utilisateur. Les données complètes
+restent dans le coffre local chiffré de Community ; seuls des signaux minimisés
+sont relayés vers le Cloud.
 
 ## Installation et environnement de test
 
@@ -55,4 +58,3 @@ Code du connecteur : **Apache-2.0**, voir [LICENSE](LICENSE).
 Les notices tierces sont conservées. Cette licence ne transfère pas les droits
 sur la marque NeuroCheckout et ne donne pas accès au code privé du Cloud.
 Une copie modifiée ne doit pas être présentée comme une version officielle.
-
