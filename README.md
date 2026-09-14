@@ -8,10 +8,10 @@ NeuroCheckout Community.
 ## Download
 
 The connector compatible with NeuroCheckout Community `v0.1.0-preview.9` is
-`v4.6.2`:
+`v4.6.3`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.2/neurocheckoutconnector-prestashop-4.6.2.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.2)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.3/neurocheckoutconnector-prestashop-4.6.3.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.3)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
@@ -42,9 +42,12 @@ and the ZIP checksum reports `OK`.
 ## Install in PrestaShop
 
 1. Back up the store and database.
+   When upgrading an older connector, also preserve its
+   `var/cache/*/neurocheckout-community-source` directory before the update.
+   Migration requires the existing state; it cannot reconstruct deleted cursors.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.2.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.3.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store
@@ -58,6 +61,18 @@ and the ZIP checksum reports `OK`.
 Never publish connector keys, customer records, cart contents or configuration
 exports in an issue or pull request. Back up the store before uninstalling or
 upgrading the module.
+
+### Persistent synchronization storage
+
+The connector moves its existing synchronization state automatically from the
+PrestaShop cache to `var/neurocheckout-community-source` under the store root.
+Clearing the cache or replacing module files must not remove this persistent
+directory. Include it in backups; it preserves synchronization cursors, pending
+records and version counters. For Nginx, deny public HTTP access to this path
+(Apache denial rules are supplied). If persistent state is lost, restore a
+consistent backup rather than resetting synchronization counters.
+Back up the adjacent `var/.neurocheckout-community-source-migration.lock` marker
+as well; it prevents missing state from being mistaken for a new installation.
 
 ## Updates
 
