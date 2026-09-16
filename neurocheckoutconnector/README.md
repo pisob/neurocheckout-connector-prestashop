@@ -1,10 +1,11 @@
 # NeuroCheckout Connector for PrestaShop
 
-Version 4.6.3 preserves synchronization state outside the PrestaShop cache and
-exports native cart amounts to the encrypted NeuroCheckout Community vault.
+Version 4.6.4 preserves synchronization state outside the PrestaShop cache,
+exports native cart amounts, and includes cover image IDs for Community product
+snapshots.
 
 Download the installable ZIP and signature verification files from the
-[official release](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.3).
+[official release](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.4).
 Follow the [installation and verification instructions](https://github.com/pisob/neurocheckout-connector-prestashop#readme).
 
 To upgrade, back up your store and upload the module ZIP through

@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.6.4
+
+- Export PrestaShop cover image IDs in Community product snapshots so
+  NeuroCheckout recovery emails can render cart and recommendation product
+  images instead of placeholders.
+- Preserve all connector credentials, queues, settings and local synchronization
+  state during the in-place upgrade.
+
 ## 4.6.3
 
 - Keep Community synchronization state in `var/neurocheckout-community-source`,
