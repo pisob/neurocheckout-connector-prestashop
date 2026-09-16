@@ -14,7 +14,7 @@ final class PrestashopSourceSnapshot
     private string $prefix;
     private float $started = 0;
     private $amountReader;
-    private const TABLES = ['shop', 'product', 'product_shop', 'product_lang', 'product_attribute',
+    private const TABLES = ['shop', 'product', 'product_shop', 'product_lang', 'image', 'image_shop', 'product_attribute',
         'product_attribute_shop', 'stock_available', 'category_product', 'cart', 'cart_product', 'customer', 'currency', 'orders'];
 
     public function __construct(PDO $connection, string $prefix, ?callable $amountReader = null)
@@ -86,6 +86,14 @@ final class PrestashopSourceSnapshot
                 // is refused; a truncated description is never exported.
                 $product['translations'] = $this->rows('SELECT id_lang, name, link_rewrite, LEFT(description_short,16385) AS description_short FROM '
                     . $this->table('product_lang') . ' WHERE id_product=? AND id_shop=? ORDER BY id_lang', [$id, $scope], 32);
+                $coverImages = $this->rows('SELECT i.id_image FROM ' . $this->table('image') . ' i
+                    LEFT JOIN ' . $this->table('image_shop') . ' image_shop
+                        ON image_shop.id_image=i.id_image AND image_shop.id_shop=?
+                    WHERE i.id_product=?
+                    ORDER BY CASE WHEN COALESCE(image_shop.cover,0)=1 THEN 0 ELSE 1 END, i.position, i.id_image', [$scope, $id], 8);
+                if ($coverImages) {
+                    $product['cover_image_id'] = (int) $coverImages[0]['id_image'];
+                }
                 $product['variants'] = $this->rows('SELECT pa.id_product_attribute, pa.reference, pas.price AS price_impact_tax_excl,
                     pas.default_on FROM ' . $this->table('product_attribute') . ' pa JOIN ' . $this->table('product_attribute_shop')
                     . ' pas ON pas.id_product_attribute=pa.id_product_attribute WHERE pa.id_product=? AND pas.id_shop=? ORDER BY pa.id_product_attribute', [$id, $scope], 128);
