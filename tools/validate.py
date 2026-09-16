@@ -18,6 +18,7 @@ for test in ["neurocheckoutconnector/tests/release_policy_test.php","neurochecko
 for test in ["neurocheckoutconnector/tests/prestashop_cart_amounts_test.php",
              "neurocheckoutconnector/tests/prestashop_source_directory_test.php",
              "neurocheckoutconnector/tests/upgrade_462_test.php",
-             "neurocheckoutconnector/tests/upgrade_463_test.php"]:
+             "neurocheckoutconnector/tests/upgrade_463_test.php",
+             "neurocheckoutconnector/tests/upgrade_464_test.php"]:
     subprocess.run(["php", str(root / test)], cwd=root, check=True, timeout=60)
 print("All PHP files linted; isolated tests passed. Real platform integration is not covered.")
