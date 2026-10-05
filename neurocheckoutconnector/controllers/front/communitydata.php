@@ -22,9 +22,10 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
             $apiKey = SecretConfiguration::get('NC_API_KEY');
             $shopId = trim((string) Configuration::get('NC_SHOP_EXTERNAL_ID'));
             $apiEndpoint = rtrim(trim((string) Configuration::get('NC_API_ENDPOINT')), '/');
-            if ($apiEndpoint === 'https://community-api-staging.neurocheckout.com'
+            $environment = AutomaticSourceBinding::environment($apiEndpoint);
+            if ($environment !== null
                 && (int) Configuration::get('NC_API_TEST_VALIDATED_AT') > 0 && $apiKey !== '' && $shopId !== '') {
-                $automatic = ['enabled' => true, 'environment' => 'staging',
+                $automatic = ['enabled' => true, 'environment' => $environment,
                     'nativeScope' => (int) $this->context->shop->id, 'platform' => 'prestashop',
                     'secret' => AutomaticSourceBinding::secret($apiKey, $shopId), 'shopId' => $shopId];
             }

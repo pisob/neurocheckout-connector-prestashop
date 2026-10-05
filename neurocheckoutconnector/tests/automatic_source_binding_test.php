@@ -24,4 +24,16 @@ foreach ([['', 'euroka'], ['key', '../euroka'], ['key', '']] as $invalid) {
         // Expected.
     }
 }
+foreach ([
+    'https://www.neurocheckout.com' => 'production',
+    'https://www.neurocheckout.com/' => 'production',
+    'https://community-api-staging.neurocheckout.com' => 'staging',
+    'http://www.neurocheckout.com' => null,
+    'https://www.neurocheckout.com.evil.invalid' => null,
+    'https://user@www.neurocheckout.com' => null,
+    'https://www.neurocheckout.com/path' => null,
+    'http://localhost:3400' => null,
+] as $endpoint => $environment) {
+    if (AutomaticSourceBinding::environment($endpoint) !== $environment) throw new RuntimeException('Invalid environment binding');
+}
 echo "automatic source binding test passed\n";

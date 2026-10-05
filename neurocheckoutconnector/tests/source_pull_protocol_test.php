@@ -51,7 +51,7 @@ $mustReject = static function (array $changes) use ($invoke): void {
 checkSource($invoke()['shopId'] === $shop);
 $mustReject([]); // Replay.
 foreach ([
-    ['enabled' => false], ['environment' => 'production'], ['method' => 'GET'],
+    ['enabled' => false], ['environment' => 'invalid'], ['method' => 'GET'],
     ['shop' => 'other-shop'], ['path' => '/module/neurocheckoutconnector/orderhistory'],
     ['secret' => 'legacy-api-key'], ['now' => (int) $time + 120001],
     ['headers' => $headers + ['origin' => 'https://evil.invalid']],

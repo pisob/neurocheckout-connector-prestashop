@@ -63,13 +63,13 @@ try {
     if (($payload['shopId'] ?? null) !== 'synthetic-shop' || !is_dir($state)) {
         throw new RuntimeException('automatic gateway did not use its private state directory');
     }
-    $configuration['environment'] = 'production';
+    $configuration['environment'] = 'invalid';
     [$disabledStatus] = SourcePullGateway::handle(
         'prestashop', 1, $webRoot, 'POST', $path, $headers, $raw, true, null,
         $configuration, $state
     );
     if ($disabledStatus !== 404) {
-        throw new RuntimeException('automatic gateway must remain disabled outside staging');
+        throw new RuntimeException('automatic gateway must reject unknown environments');
     }
     echo "automatic PrestaShop Community gateway test passed\n";
 } finally {
