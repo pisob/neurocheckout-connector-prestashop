@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.6.5
+
+- Support Community synchronization with production accounts.
+- Keep environment-specific authorization and synchronization state separate.
+- Preserve existing credentials, settings and queues during upgrades.
+
 ## 4.6.4
 
 - Export PrestaShop cover image IDs in Community product snapshots so
