@@ -57,7 +57,7 @@ class NeuroCheckoutConnector extends Module
     {
         $this->name = 'neurocheckoutconnector';
         $this->tab = 'analytics_stats';
-        $this->version = '4.6.5';
+        $this->version = '4.6.6';
         $this->author = 'NeuroCheckout';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -2775,7 +2775,7 @@ class NeuroCheckoutConnector extends Module
                 'message' => $e->getMessage(),
             ]));
         } catch (\Throwable $e) {
-            PrestaShopLogger::addLog('[NC] Save config error: ' . $e->getMessage(), 3);
+            PrestaShopLogger::addLog('[NC] Configuration save failed.', 3);
             die(json_encode([
                 'success' => false,
                 'message' => ModuleTranslator::trans('config_save_failed'),
@@ -2866,6 +2866,9 @@ class NeuroCheckoutConnector extends Module
         $this->validateIaConfigurationRequest();
 
         if (Tools::getIsset('NC_API_ENDPOINT')) {
+            if (!is_string(Tools::getValue('NC_API_ENDPOINT'))) {
+                throw new \InvalidArgumentException('The API endpoint must be a URL.');
+            }
             $submittedEndpoint = (string) Tools::getValue('NC_API_ENDPOINT');
             $normalizedEndpoint = EndpointPolicy::normalize($submittedEndpoint);
             if ($normalizedEndpoint === null) {
@@ -2895,6 +2898,16 @@ class NeuroCheckoutConnector extends Module
             'NC_MAX_DISCOUNT_PERCENT'=>'float'
         ];
 
+        // Validate the complete submission before writing any configuration.
+        foreach ($map as $key => $type) {
+            if (Tools::getIsset($key) && !is_scalar(Tools::getValue($key))) {
+                throw new \InvalidArgumentException('Invalid configuration field.');
+            }
+        }
+        if (Tools::getIsset('NC_SHOP_EXTERNAL_ID') && trim((string) Tools::getValue('NC_SHOP_EXTERNAL_ID')) === '') {
+            throw new \InvalidArgumentException('Shop External ID is required.');
+        }
+
         foreach ($map as $key=>$type) {
 
             if (!Tools::getIsset($key)) continue;
@@ -2916,7 +2929,10 @@ class NeuroCheckoutConnector extends Module
                 continue;
             }
 
-            Configuration::updateValue($key,$value);
+            if (!Configuration::updateValue($key, $value)) {
+                $this->clearApiTestValidationState();
+                throw new \RuntimeException('Configuration write failed.');
+            }
         }
 
         $apiSettingsChanged = (
@@ -3120,6 +3136,11 @@ class NeuroCheckoutConnector extends Module
 
     public function isApiTestValidationCurrent(): bool
     {
+        if (!EndpointPolicy::isAllowed((string) Configuration::get('NC_API_ENDPOINT'))
+            || trim(SecretConfiguration::get('NC_API_KEY')) === ''
+            || trim((string) Configuration::get('NC_SHOP_EXTERNAL_ID')) === '') {
+            return false;
+        }
         $validatedAt = $this->getApiTestValidatedAt();
         if ($validatedAt <= 0) {
             return false;
@@ -3156,6 +3177,7 @@ class NeuroCheckoutConnector extends Module
     public function getContent()
     {
         $saveConfigSubmitted = false;
+        $saveError = '';
 
         $this->refreshConnectorUpdateStatus();
         $updateNotice = $this->renderConnectorUpdateNotice();
@@ -3172,8 +3194,15 @@ class NeuroCheckoutConnector extends Module
             Tools::isSubmit('submitExecutionMode')
             || Tools::isSubmit('submitNcSaveConfig')
         ) {
-            $this->persistConfigurationFromRequest();
-            $saveConfigSubmitted = true;
+            try {
+                $this->persistConfigurationFromRequest();
+                $saveConfigSubmitted = true;
+            } catch (\InvalidArgumentException $e) {
+                $saveError = $this->displayError(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
+            } catch (\Throwable $e) {
+                PrestaShopLogger::addLog('[NC] Configuration save failed.', 3);
+                $saveError = $this->displayError(ModuleTranslator::trans('config_save_failed'));
+            }
         }
 
         $this->context->smarty->assign([
@@ -3201,7 +3230,7 @@ class NeuroCheckoutConnector extends Module
             )
         ]);
 
-        return $updateNotice . $this->display(
+        return $saveError . $updateNotice . $this->display(
             __FILE__,
             'views/templates/admin/configuration_agents.tpl'
         );
