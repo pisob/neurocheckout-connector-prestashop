@@ -15,6 +15,10 @@ function assertSameValue($expected, $actual, string $label): void
 }
 
 assertSameValue('https://neurocheckout.com', EndpointPolicy::normalize('https://neurocheckout.com/'), 'production endpoint');
+assertSameValue('https://www.neurocheckout.com', EndpointPolicy::normalize(' HTTPS://WWW.NEUROCHECKOUT.COM:443/ '), 'official production endpoint');
+foreach (['http://www.neurocheckout.com', 'https://www.neurocheckout.com.evil.example', 'https://user:pass@www.neurocheckout.com', 'https://www.neurocheckout.com?x=1', 'https://www.neurocheckout.com#x', 'https://www.neurocheckout.com:444', 'https://www.neurocheckout.com/api'] as $invalid) {
+    assertSameValue(null, EndpointPolicy::normalize($invalid), 'unsafe official-host variant rejected');
+}
 assertSameValue('https://staging.neurocheckout.com', EndpointPolicy::normalize('HTTPS://STAGING.NEUROCHECKOUT.COM'), 'staging endpoint');
 assertSameValue('https://community-api-staging.neurocheckout.com', EndpointPolicy::normalize('https://community-api-staging.neurocheckout.com/'), 'public authenticated staging API');
 assertSameValue(null, EndpointPolicy::normalize('http://community-api-staging.neurocheckout.com'), 'staging API requires TLS');

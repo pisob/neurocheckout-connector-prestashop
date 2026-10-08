@@ -5,6 +5,7 @@ namespace NeuroCheckout\Security;
 class EndpointPolicy
 {
     private const CLOUD_HOSTS = [
+        'www.neurocheckout.com',
         'neurocheckout.com',
         'staging.neurocheckout.com',
         'community-api-staging.neurocheckout.com',

@@ -1,5 +1,15 @@
 # Changelog
 
+## 4.6.6
+
+- Accept the official `https://www.neurocheckout.com` API address while retaining
+  strict HTTPS and host validation.
+- Show configuration errors in the module instead of an HTTP 500 error page.
+- Reject malformed fields and empty store identifiers before saving, detect
+  configuration write failures, and avoid sensitive exception details in logs.
+- Preserve an existing API key when its input is blank and require a new API test
+  after connection settings change. Add configuration and upgrade regression tests.
+
 ## 4.6.5
 
 - Support Community synchronization with production accounts.
