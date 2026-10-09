@@ -71,7 +71,8 @@ final class PrestashopSourceSnapshot
                 ps.id_tax_rules_group, ps.id_category_default FROM ' . $this->table('product_shop') . ' ps
                 JOIN ' . $this->table('product') . ' p ON p.id_product=ps.id_product WHERE ps.id_shop=? ORDER BY p.id_product', [$scope], 256);
             $carts = $this->rows('SELECT c.id_cart, c.id_customer, c.id_lang, c.id_currency, c.date_add, c.date_upd,
-                u.iso_code AS currency, customer.email, customer.firstname, customer.lastname
+                u.iso_code AS currency, customer.email, customer.firstname, customer.lastname,
+                customer.is_guest AS customer_is_guest
                 FROM ' . $this->table('cart') . ' c
                 LEFT JOIN ' . $this->table('currency') . ' u ON u.id_currency=c.id_currency
                 LEFT JOIN ' . $this->table('customer') . ' customer ON customer.id_customer=c.id_customer

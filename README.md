@@ -1,5 +1,12 @@
 # NeuroCheckout Connector for PrestaShop
 
+## Customer identity in Community
+
+Cart snapshots preserve the customer's native guest status. A customer ID or
+email alone is not proof of registration. Missing customer records remain
+unknown. Updating preserves merchant settings and cart references; a fresh
+synchronization is required before validating registered-customer recovery.
+
 This is the official open-source PrestaShop connector for NeuroCheckout. It
 sends authenticated store events to NeuroCheckout Cloud and provides signed,
 read-only product and cart snapshots to the encrypted local vault in

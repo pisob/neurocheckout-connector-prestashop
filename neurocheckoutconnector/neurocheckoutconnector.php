@@ -57,7 +57,7 @@ class NeuroCheckoutConnector extends Module
     {
         $this->name = 'neurocheckoutconnector';
         $this->tab = 'analytics_stats';
-        $this->version = '4.6.6';
+        $this->version = '4.6.7';
         $this->author = 'NeuroCheckout';
         $this->need_instance = 0;
         $this->bootstrap = true;
