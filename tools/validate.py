@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
 """Local lint and isolated checks; no store, database or Cloud connection."""
 import pathlib
+import re
 import subprocess
 import sys
 
 root = pathlib.Path(__file__).resolve().parents[1]
+module = (root / 'neurocheckoutconnector/neurocheckoutconnector.php').read_text()
+version = re.search(r"\$this->version\s*=\s*'([^']+)'", module).group(1)
+readme = (root / 'README.md').read_text()
+base = 'https://github.com/pisob/neurocheckout-connector-prestashop/releases'
+archive = f'neurocheckoutconnector-prestashop-{version}.zip'
+for expected in [f'The current installable connector is `v{version}`',
+                 f'{base}/download/v{version}/{archive}', f'{base}/tag/v{version}',
+                 f'Upload `{archive}`']:
+    if expected not in readme:
+        raise RuntimeError('README download instructions must match module version: ' + expected)
 files = [p for p in root.rglob("*") if p.is_file() and ".git" not in p.relative_to(root).parts]
 for p in files:
     if p.is_symlink():
