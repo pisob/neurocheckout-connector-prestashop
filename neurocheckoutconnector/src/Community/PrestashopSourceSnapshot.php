@@ -62,8 +62,12 @@ final class PrestashopSourceSnapshot
         foreach ($engines as $table) {
             if (strcasecmp((string) $table['ENGINE'], 'InnoDB') !== 0) { throw new RuntimeException('source_snapshot_not_transactional'); }
         }
-        $this->db->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-        $this->db->exec('START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY');
+        // Start through PDO: PHP 7.4 does not track transactions started with
+        // exec('START TRANSACTION'), so rollBack() would fail after every read.
+        // REPEATABLE READ acquires one consistent snapshot at the first SELECT;
+        // READ ONLY is enforced by the database, not just by application code.
+        $this->db->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY');
+        $this->db->beginTransaction();
         try {
             $shop = $this->rows('SELECT id_shop_group, active FROM ' . $this->table('shop') . ' WHERE id_shop=?', [$scope], 1);
             if (count($shop) !== 1 || !(int) $shop[0]['active']) { throw new RuntimeException('source_shop_unavailable'); }

@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.6.8
+
+- Fix read-only Community snapshot transactions on PrestaShop 1.7.8.11 / PHP 7.4,
+  including repeated reads and cleanup after a rejected shop scope.
+- Show actionable PHP, extension and incomplete-package diagnostics before
+  installation or configuration can fail.
+- Preserve merchant credentials, queued events and persistent synchronization
+  state during an in-place update. Add runtime and upgrade regression coverage.
+
+## 4.6.7
+
+- Preserve native customer guest status in Community cart snapshots.
+
 ## 4.6.6
 
 - Accept the official `https://www.neurocheckout.com` API address while retaining

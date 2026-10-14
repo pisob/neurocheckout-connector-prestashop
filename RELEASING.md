@@ -1,12 +1,13 @@
 # Publication contrôlée
 
-Aucune release installable n'est créée par ce premier import de sources.
-La création des tags est bloquée tant que le processus de signature n'est pas prêt.
+Les releases installables sont publiées manuellement depuis un commit revu et
+validé, avec un tag signé et des sommes SHA-256 signées par la clé mainteneur.
 
-Avant une première release :
+Avant chaque release :
 1. Revue du commit exact, des licences, dépendances, fichiers inclus et données.
-2. CI réussie et tests réels en staging : installation, upgrade, cron, restauration,
-   commande convertie, rotation de clé et désinstallation sur les versions annoncées.
+2. CI réussie et tests dans une boutique de validation : installation, mise à jour
+   et parcours concernés sur les versions annoncées. Documenter les tests réalisés
+   et leurs limites ; ne pas présenter un test isolé comme une validation complète.
 3. Archive reproductible issue d'une liste d'inclusion, sans tests, données ni secrets.
 4. SHA-256 et signature par une clé mainteneur dédiée, privée et conservée hors Git.
 5. Publication de la clé publique et de son empreinte par un canal officiel.
@@ -16,4 +17,3 @@ Avant une première release :
 
 Le code Cloud, les accès de déploiement et les clés de signature ne doivent jamais
 être placés dans ce dépôt ni exposés aux tests de contributions.
-

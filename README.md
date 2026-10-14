@@ -14,14 +14,24 @@ NeuroCheckout Community.
 
 ## Download
 
-The current installable connector is `v4.6.7`:
+The current installable connector is `v4.6.8`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.7/neurocheckoutconnector-prestashop-4.6.7.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.7)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.8/neurocheckoutconnector-prestashop-4.6.8.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.8)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
 official module ZIP before uploading it to PrestaShop.
+
+## Compatibility
+
+Version 4.6.8 fixes Community snapshot reads on **PrestaShop 1.7.8.11 with
+PHP 7.4**. The website and scheduled tasks must both use a compatible PHP version.
+The module requires PHP 7.4 or newer, cURL and OpenSSL; missing requirements are
+reported in the module administration screen. Use a PHP version supported by
+your PrestaShop release. PHP 7.4 and PrestaShop 1.7 are legacy software: plan an
+upgrade for production stores rather than treating module compatibility as a
+security guarantee.
 
 ## Verify the download
 
@@ -53,7 +63,7 @@ and the ZIP checksum reports `OK`.
    Migration requires the existing state; it cannot reconstruct deleted cursors.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.7.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.8.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store

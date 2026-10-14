@@ -4,10 +4,12 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+// Check legacy host requirements before Composer can terminate the admin page.
+require_once __DIR__ . '/src/Compatibility/RuntimeRequirements.php';
 $ncAutoloadPath = __DIR__ . '/vendor/autoload.php';
-if (is_file($ncAutoloadPath)) {
+if (PHP_VERSION_ID >= 70400 && is_file($ncAutoloadPath)) {
     require_once $ncAutoloadPath;
-} else {
+} elseif (PHP_VERSION_ID >= 70400) {
     if (class_exists('PrestaShopLogger')) {
         PrestaShopLogger::addLog(
             '[NC] Missing Composer autoload: ' . $ncAutoloadPath,
@@ -57,7 +59,7 @@ class NeuroCheckoutConnector extends Module
     {
         $this->name = 'neurocheckoutconnector';
         $this->tab = 'analytics_stats';
-        $this->version = '4.6.7';
+        $this->version = '4.6.8';
         $this->author = 'NeuroCheckout';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -68,6 +70,14 @@ class NeuroCheckoutConnector extends Module
         ];
 
         parent::__construct();
+
+        $runtimeErrors = $this->getRuntimeRequirementErrors();
+        if ($runtimeErrors) {
+            $this->displayName = 'NeuroCheckout - Enterprise Connector';
+            $this->description = 'Secure asynchronous event connector with monitoring and resilience.';
+            $this->warning = implode(' ', $runtimeErrors);
+            return;
+        }
 
         if (class_exists(ModuleTranslator::class)) {
             $this->displayName = ModuleTranslator::trans('module_display_name');
@@ -134,12 +144,12 @@ class NeuroCheckoutConnector extends Module
 
     public function install()
     {
-        if (
-            version_compare(_PS_VERSION_, '1.7.7.0', '<') ||
-            version_compare(PHP_VERSION, '7.4.0', '<') ||
-            !extension_loaded('curl') ||
-            !extension_loaded('openssl')
-        ) {
+        $runtimeErrors = $this->getRuntimeRequirementErrors();
+        if ($runtimeErrors) {
+            foreach ($runtimeErrors as $error) {
+                $this->_errors[] = $error;
+            }
+            $this->warning = implode(' ', $runtimeErrors);
             return false;
         }
 
@@ -3174,8 +3184,23 @@ class NeuroCheckoutConnector extends Module
         );
     }
 
+    private function getRuntimeRequirementErrors(): array
+    {
+        $language = isset($this->context->language->iso_code)
+            ? (string) $this->context->language->iso_code : 'en';
+        return \NeuroCheckout\Compatibility\RuntimeRequirements::errors(
+            _PS_VERSION_, PHP_VERSION, get_loaded_extensions(),
+            is_file(__DIR__ . '/vendor/autoload.php'), $language
+        );
+    }
+
     public function getContent()
     {
+        $runtimeErrors = $this->getRuntimeRequirementErrors();
+        if ($runtimeErrors) {
+            return $this->displayError(implode(' ', $runtimeErrors));
+        }
+
         $saveConfigSubmitted = false;
         $saveError = '';
 

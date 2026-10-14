@@ -9,6 +9,20 @@ concurrency:
   group: validation-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
+  php74:
+    name: PHP 7.4 compatibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Isolated tests on the PrestaShop 1.7 PHP runtime
+        run: |
+          docker run --rm --network none --entrypoint sh \
+            -v "$PWD:/release:ro" -w /release \
+            prestashop/prestashop@sha256:1281525e9518e1e34869af813e3b3d71ccf8cfb94ed8ffb398d050379c79edbb \
+            tools/validate-php-runtime.sh
   validation:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -27,4 +41,3 @@ jobs:
           echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $scan_dir/gitleaks.tar.gz" | sha256sum -c -
           tar -xzf "$scan_dir/gitleaks.tar.gz" -C "$scan_dir" gitleaks
           "$scan_dir/gitleaks" dir . --redact --no-banner
-

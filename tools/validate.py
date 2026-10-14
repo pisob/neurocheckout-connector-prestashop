@@ -34,6 +34,11 @@ for test in ["tests/configuration_save_test.php", "neurocheckoutconnector/tests/
              "neurocheckoutconnector/tests/upgrade_464_test.php",
              "neurocheckoutconnector/tests/upgrade_465_test.php",
              "neurocheckoutconnector/tests/upgrade_466_test.php",
-             "neurocheckoutconnector/tests/upgrade_467_test.php"]:
+             "neurocheckoutconnector/tests/upgrade_467_test.php",
+             "neurocheckoutconnector/tests/upgrade_468_test.php",
+             "neurocheckoutconnector/tests/runtime_requirements_test.php",
+             "neurocheckoutconnector/tests/snapshot_transaction_test.php"]:
     subprocess.run(["php", str(root / test)], cwd=root, check=True, timeout=60)
+subprocess.run(["php", "-n", str(root / "neurocheckoutconnector/tests/runtime_bootstrap_test.php")],
+               cwd=root, check=True, timeout=60)
 print("All PHP files linted; isolated tests passed. Real platform integration is not covered.")
