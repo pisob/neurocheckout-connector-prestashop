@@ -6,7 +6,7 @@ php -v | head -1
 find neurocheckoutconnector -name '*.php' | while IFS= read -r file; do
     php -l "$file" > /dev/null || exit 1
 done
-for test in neurocheckoutconnector/tests/*_test.php tests/configuration_save_test.php tests/security_boundaries.php; do
+for test in neurocheckoutconnector/tests/*_test.php tests/*_test.php tests/security_boundaries.php; do
     case "$test" in
         *runtime_legacy_bootstrap*|*runtime_bootstrap*) continue ;;
     esac

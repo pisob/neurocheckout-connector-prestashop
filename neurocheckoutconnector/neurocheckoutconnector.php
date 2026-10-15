@@ -59,7 +59,7 @@ class NeuroCheckoutConnector extends Module
     {
         $this->name = 'neurocheckoutconnector';
         $this->tab = 'analytics_stats';
-        $this->version = '4.6.8';
+        $this->version = '4.6.9';
         $this->author = 'NeuroCheckout';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -1541,6 +1541,12 @@ class NeuroCheckoutConnector extends Module
                 }
 
                 Configuration::updateValue('NC_CRON_LAST_RUN_' . $shopId, time());
+
+                // Keep Cloud's observed connector version current without an
+                // administrator having to revisit the module configuration.
+                if (!$isTestRun) {
+                    $this->refreshConnectorUpdateStatus();
+                }
 
                 $shopStartTime = microtime(true);
                 $dispatcher = new \NeuroCheckout\Application\EventDispatcher((int) $shopId);
@@ -3263,11 +3269,17 @@ class NeuroCheckoutConnector extends Module
 
     private function refreshConnectorUpdateStatus(): void
     {
+        $now = time();
         $lastChecked = (int) Configuration::get('NC_CONNECTOR_UPDATE_CHECKED_AT');
-        if ($lastChecked > 0 && (time() - $lastChecked) < 86400) {
+        $reportedVersion = (string) Configuration::get('NC_CONNECTOR_REPORTED_VERSION');
+        if ($reportedVersion === $this->version && $lastChecked > 0 && ($now - $lastChecked) >= 0 && ($now - $lastChecked) < 86400) {
             return;
         }
-        Configuration::updateValue('NC_CONNECTOR_UPDATE_CHECKED_AT', time());
+        $lastAttempt = (int) Configuration::get('NC_CONNECTOR_UPDATE_ATTEMPTED_AT');
+        if ($lastAttempt > 0 && ($now - $lastAttempt) >= 0 && ($now - $lastAttempt) < 300) {
+            return;
+        }
+        Configuration::updateValue('NC_CONNECTOR_UPDATE_ATTEMPTED_AT', $now);
         try {
             $result = (new SecureHttpClient())->checkConnectorVersion($this->version);
             if (empty($result['success']) || !is_string($result['body'] ?? null)) {
@@ -3278,12 +3290,14 @@ class NeuroCheckoutConnector extends Module
                 return;
             }
             $releaseUrl = trim((string) ($payload['release_url'] ?? ''));
-            if (strpos($releaseUrl, 'https://github.com/pisob/neurocheckout-connector-prestashop/releases') !== 0) {
+            if (!preg_match('~^https://github\.com/pisob/neurocheckout-connector-prestashop/releases(?:/[^?#]*)?$~D', $releaseUrl)) {
                 return;
             }
             Configuration::updateValue('NC_CONNECTOR_UPDATE_STATUS', (string) ($payload['status'] ?? 'current'));
             Configuration::updateValue('NC_CONNECTOR_LATEST_VERSION', (string) ($payload['latest_version'] ?? $this->version));
             Configuration::updateValue('NC_CONNECTOR_RELEASE_URL', $releaseUrl);
+            Configuration::updateValue('NC_CONNECTOR_REPORTED_VERSION', $this->version);
+            Configuration::updateValue('NC_CONNECTOR_UPDATE_CHECKED_AT', $now);
         } catch (\Throwable $e) {
             PrestaShopLogger::addLog('[NC] Connector version check failed: ' . $e->getMessage(), 2);
         }

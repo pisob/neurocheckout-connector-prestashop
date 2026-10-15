@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.6.9
+
+- Initialize the scoped cart context during early cart-save events, preventing
+  PrestaShop 1.7 recovery links from terminating before checkout can load.
+- Restore the visitor's previous cart context after calculation, including failures.
+- Report the actual installed connector version from cron without an admin visit.
+- Retry failed version checks after five minutes instead of caching failure for a day.
+- Preserve credentials, settings, queues and persistent source state on upgrade.
+- Validate isolated PHP 7.4/8.3 regressions and the recovered-cart checkout on a
+  local PrestaShop 1.7.8.11 test store; this is not full platform-matrix acceptance.
+
 ## 4.6.8
 
 - Fix read-only Community snapshot transactions on PrestaShop 1.7.8.11 / PHP 7.4,

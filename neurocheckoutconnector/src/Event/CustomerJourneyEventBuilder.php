@@ -238,6 +238,22 @@ class CustomerJourneyEventBuilder
             ];
         }
 
+        // actionCartSave can run inside FrontController::init before PrestaShop
+        // assigns Context::cart. Its 1.7 price helpers terminate the request in
+        // that state (die is not catchable). Supply only the cart being measured
+        // for this calculation, and never replace the visitor's lasting context.
+        $context = Context::getContext();
+        $previousCart = $context->cart;
+        try {
+            $context->cart = $cart;
+            return self::buildInitializedCartPayload($cart, $includeItems);
+        } finally {
+            $context->cart = $previousCart;
+        }
+    }
+
+    private static function buildInitializedCartPayload(Cart $cart, bool $includeItems): array
+    {
         $total = 0.0;
         try {
             $total = (float) $cart->getOrderTotal(true, Cart::BOTH);

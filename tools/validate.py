@@ -26,7 +26,7 @@ for p in files:
             sys.exit(result.stdout + result.stderr)
 for test in ["neurocheckoutconnector/tests/release_policy_test.php","neurocheckoutconnector/tests/request_body_decoder_test.php","neurocheckoutconnector/tests/secret_configuration_test.php","neurocheckoutconnector/tests/secret_configuration_no_key_test.php","neurocheckoutconnector/tests/signed_request_replay_test.php","neurocheckoutconnector/tests/upgrade_459_test.php","neurocheckoutconnector/tests/source_pull_protocol_test.php","neurocheckoutconnector/tests/automatic_source_binding_test.php","neurocheckoutconnector/tests/community_automatic_gateway_test.php","tests/security_boundaries.php"]:
     subprocess.run(["php", str(root / test)], cwd=root, check=True, timeout=60)
-for test in ["tests/configuration_save_test.php", "neurocheckoutconnector/tests/prestashop_cart_amounts_test.php",
+for test in ["tests/configuration_save_test.php", "tests/journey_cart_context_test.php", "tests/version_reporting_test.php", "neurocheckoutconnector/tests/prestashop_cart_amounts_test.php",
              "neurocheckoutconnector/tests/prestashop_source_directory_test.php",
              "neurocheckoutconnector/tests/upgrade_462_test.php",
              "neurocheckoutconnector/tests/upgrade_461_test.php",
@@ -36,6 +36,7 @@ for test in ["tests/configuration_save_test.php", "neurocheckoutconnector/tests/
              "neurocheckoutconnector/tests/upgrade_466_test.php",
              "neurocheckoutconnector/tests/upgrade_467_test.php",
              "neurocheckoutconnector/tests/upgrade_468_test.php",
+             "neurocheckoutconnector/tests/upgrade_469_test.php",
              "neurocheckoutconnector/tests/runtime_requirements_test.php",
              "neurocheckoutconnector/tests/snapshot_transaction_test.php"]:
     subprocess.run(["php", str(root / test)], cwd=root, check=True, timeout=60)
