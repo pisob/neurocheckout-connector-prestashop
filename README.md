@@ -14,10 +14,10 @@ NeuroCheckout Community.
 
 ## Download
 
-The current installable connector is `v4.6.8`:
+The current installable connector is `v4.6.9`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.8/neurocheckoutconnector-prestashop-4.6.8.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.8)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.9/neurocheckoutconnector-prestashop-4.6.9.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.9)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
@@ -25,7 +25,7 @@ official module ZIP before uploading it to PrestaShop.
 
 ## Compatibility
 
-Version 4.6.8 fixes Community snapshot reads on **PrestaShop 1.7.8.11 with
+Version 4.6.9 includes Community snapshot and recovered-cart context fixes on **PrestaShop 1.7.8.11 with
 PHP 7.4**. The website and scheduled tasks must both use a compatible PHP version.
 The module requires PHP 7.4 or newer, cURL and OpenSSL; missing requirements are
 reported in the module administration screen. Use a PHP version supported by
@@ -63,7 +63,7 @@ and the ZIP checksum reports `OK`.
    Migration requires the existing state; it cannot reconstruct deleted cursors.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.8.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.9.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store
@@ -93,7 +93,10 @@ as well; it prevents missing state from being mistaken for a new installation.
 ## Updates
 
 The connector checks its version through the existing authenticated Cloud
-connection at most once every 24 hours. When an update is available, its
+connection during cron and configuration visits. Successful observations are
+cached for 24 hours; failures are retried no sooner than five minutes later, and
+a changed installed version is reported without waiting for the daily cache.
+When an update is available, its
 configuration page displays the exact official GitHub release. The Cloud never
 downloads files to the store and cannot install an update.
 

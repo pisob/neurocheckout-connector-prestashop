@@ -44,7 +44,8 @@ namespace {
     $module = (new \ReflectionClass('NeuroCheckoutConnector'))->newInstanceWithoutConstructor();
     $smarty = new class { public array $values = []; public function assign($values) { $this->values = array_merge($this->values, $values); } };
     $module->context = (object) ['smarty'=>$smarty, 'link'=>new class { public function getAdminLink(...$args) { return '/admin'; } }];
-    Configuration::$values = ['NC_CONNECTOR_UPDATE_CHECKED_AT'=>time(), 'NC_API_ENDPOINT'=>'https://neurocheckout.com', 'NC_SHOP_EXTERNAL_ID'=>'synthetic-shop'];
+    $module->version = '4.6.8';
+    Configuration::$values = ['NC_CONNECTOR_REPORTED_VERSION'=>$module->version, 'NC_CONNECTOR_UPDATE_CHECKED_AT'=>time(), 'NC_API_ENDPOINT'=>'https://neurocheckout.com', 'NC_SHOP_EXTERNAL_ID'=>'synthetic-shop'];
     check(SecretConfiguration::set('NC_API_KEY', 'synthetic-secret'), 'key saved');
     $module->markApiTestValidationSuccess();
     check($module->isApiTestValidationCurrent(), 'initial validation');
