@@ -1,5 +1,32 @@
 # NeuroCheckout Connector for PrestaShop
 
+## Native account history (candidate)
+
+With matching Community and Cloud candidates, the signed source can read a
+complete native account order history independently of retained carts. It binds
+the active registered customer, email and current shop; it does not borrow guest
+or other-shop orders. Native newsletter state is read without changing it.
+The bounded, read-only repeatable-read transaction requires InnoDB and retains
+metadata locks. More than 128 orders, 128 payments, 128 credit notes, 512 combined
+lines or 64,000 bytes is unavailable, never silently truncated. SQL statements
+and lock waits are bounded to one second, with a three-second cooperative budget.
+
+Payments can span split orders: each payment appears once with its native order
+relations, without an invented per-order allocation. Order totals, native paid
+fields, state flags, credits and returned/refunded quantities remain separate
+facts. A credit note does not establish a bank refund. Local native timestamps
+are retained with the current runtime timezone, not claimed as proven historic
+UTC. No address, name, payment method, card or transaction details are returned.
+The existing HTTPS/HMAC, replay and rate guards apply; responses bind the exact
+request, expire after 15 seconds, and are not cached or stored in the local vault.
+
+Checks: 83 protocol and 58 disposable native SQL assertions on PHP 7.4/8.3,
+including shared payments, foreign references, consent withdrawal during a
+snapshot, schema/engine failures, capacity limits and caller transaction safety.
+Native read-only comparison and the candidate Community bridge are additional
+checks, not live HTTPS or delivered-email tests. This does not activate campaigns
+or change installed stores. The current stable download below is unchanged.
+
 ## Customer identity in Community
 
 Candidate: local snapshots now include the native newsletter preference for an

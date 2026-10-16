@@ -23,7 +23,12 @@ for attempt in {1..30}; do
 done
 [[ "$fixture_ready" == 1 ]]
 php neurocheckoutconnector/tests/prestashop_source_snapshot_test.php "$fixture_dir/mariadb.sock"
+php neurocheckoutconnector/tests/customer_history_sql_test.php "$fixture_dir/mariadb.sock"
 docker run --rm --network none --entrypoint php \
   -v "$PWD:/release:ro" -v "$fixture_dir:$fixture_dir" -w /release \
   prestashop/prestashop@sha256:1281525e9518e1e34869af813e3b3d71ccf8cfb94ed8ffb398d050379c79edbb \
   neurocheckoutconnector/tests/prestashop_source_snapshot_test.php "$fixture_dir/mariadb.sock"
+docker run --rm --network none --entrypoint php \
+  -v "$PWD:/release:ro" -v "$fixture_dir:$fixture_dir" -w /release \
+  prestashop/prestashop@sha256:1281525e9518e1e34869af813e3b3d71ccf8cfb94ed8ffb398d050379c79edbb \
+  neurocheckoutconnector/tests/customer_history_sql_test.php "$fixture_dir/mariadb.sock"
