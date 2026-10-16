@@ -76,7 +76,9 @@ final class PrestashopSourceSnapshot
                 JOIN ' . $this->table('product') . ' p ON p.id_product=ps.id_product WHERE ps.id_shop=? ORDER BY p.id_product', [$scope], 256);
             $carts = $this->rows('SELECT c.id_cart, c.id_customer, c.id_lang, c.id_currency, c.date_add, c.date_upd,
                 u.iso_code AS currency, customer.email, customer.firstname, customer.lastname,
-                customer.is_guest AS customer_is_guest
+                customer.is_guest AS customer_is_guest, customer.newsletter AS marketing_newsletter,
+                customer.active AS marketing_active, customer.deleted AS marketing_deleted,
+                customer.id_shop AS marketing_shop
                 FROM ' . $this->table('cart') . ' c
                 LEFT JOIN ' . $this->table('currency') . ' u ON u.id_currency=c.id_currency
                 LEFT JOIN ' . $this->table('customer') . ' customer ON customer.id_customer=c.id_customer
@@ -111,6 +113,20 @@ final class PrestashopSourceSnapshot
             }
             foreach ($carts as $cart) {
                 $cart['source_schema'] = 'prestashop-native-v1';
+                $cart['native_scope'] = (string) $scope;
+                // Native account preference, not optin (partner offers), email
+                // presence, order creation or a browser-provided cart field.
+                // Cross-shop/shared-customer consent needs a separate explicit
+                // scope policy; do not inherit a grant from another shop.
+                $known = (int) $cart['id_customer'] > 0 && (int) $cart['marketing_shop'] === $scope
+                    && (string) $cart['marketing_active'] === '1' && (string) $cart['marketing_deleted'] === '0'
+                    && in_array((string) $cart['marketing_newsletter'], ['0', '1'], true);
+                $cart['marketing_consent'] = ['state' => $known ? ((int) $cart['marketing_newsletter'] === 1 ? 'granted' : 'denied') : 'unknown',
+                    'source' => 'prestashop_customer_newsletter', 'email' => $known ? (string) $cart['email'] : '',
+                    'scope' => (string) $scope, 'changed_at' => null];
+                // Native newsletter_date_add is not a reliable withdrawal or
+                // last-change timestamp. Do not fabricate an audit timestamp.
+                unset($cart['marketing_newsletter'], $cart['marketing_active'], $cart['marketing_deleted'], $cart['marketing_shop']);
                 $id = (int) $cart['id_cart'];
                 $cart['items'] = $this->rows('SELECT id_shop, id_product, id_product_attribute, id_customization, quantity, id_address_delivery FROM '
                     . $this->table('cart_product') . ' WHERE id_cart=? ORDER BY id_product, id_product_attribute, id_customization, id_address_delivery', [$id], 128);

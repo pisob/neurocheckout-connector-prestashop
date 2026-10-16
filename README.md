@@ -2,6 +2,15 @@
 
 ## Customer identity in Community
 
+Candidate: local snapshots now include the native newsletter preference for an
+active, non-deleted customer belonging to this shop. Partner-offer opt-in, cart
+creation and billing email are not substitutes. Consent from another shop is not
+inherited, and unknown evidence blocks recommendations. The exporter never opts
+customers in or invents consent timestamps. Cloud must recheck this state plus
+unsubscribe and delivery policies before sending. This does not activate campaigns.
+The disposable SQL regression retains the released shop-specific cover-image
+selection alongside consent, scope and transaction tests.
+
 Cart snapshots preserve the customer's native guest status. A customer ID or
 email alone is not proof of registration. Missing customer records remain
 unknown. Updating preserves merchant settings and cart references; a fresh
