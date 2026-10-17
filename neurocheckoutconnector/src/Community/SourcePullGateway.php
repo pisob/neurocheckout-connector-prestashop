@@ -40,11 +40,18 @@ final class SourcePullGateway
                 static function (string $nonce, int $ttl) use ($statePath): bool {
                     return self::guard($statePath, $nonce, $ttl);
                 }, true, $configuration['environment']);
+            $history = ($input['operation'] ?? null) === 'customer_history';
+            $prices = ($input['operation'] ?? null) === 'customer_prices';
+            if (($history || $prices) && $input['nativeShopId'] !== (string) $nativeScope) {
+                return self::error(403, 'source_forbidden');
+            }
             if ($exporter === null) {
                 return self::error(503, 'source_export_not_ready');
             }
             $page = $exporter($input, $nativeScope, $configuration, $directory);
-            self::validatePage($page, $input);
+            if ($history) { PrestashopCustomerHistoryProtocol::response($page, $input, $nativeScope, $raw); }
+            elseif ($prices) { PrestashopCustomerPriceProtocol::response($page, $input, $nativeScope, $raw); }
+            else { self::validatePage($page, $input); }
             $body = json_encode($page, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             return [200, self::headers() + [
                 'X-NC-Source-Response' => SourcePullProtocol::responseSignature($configuration['secret'], $headers['x-nc-source-nonce'], $body),
@@ -53,7 +60,8 @@ final class SourcePullGateway
             $codes = ['source_unauthorized' => 401, 'source_replay' => 409, 'source_invalid' => 400, 'source_rate_limited' => 429,
                 'source_resync_required' => 409, 'source_snapshot_capacity' => 503, 'source_snapshot_timeout' => 503,
                 'source_snapshot_not_transactional' => 503, 'source_scope_inconsistent' => 503,
-                'source_schema_unavailable' => 503, 'source_shop_unavailable' => 503];
+                'source_schema_unavailable' => 503, 'source_shop_unavailable' => 503, 'customer_history_unavailable' => 503,
+                'customer_prices_unavailable' => 503];
             $code = $error->getMessage();
             return self::error($codes[$code] ?? 503, isset($codes[$code]) ? $code : 'source_unavailable');
         }

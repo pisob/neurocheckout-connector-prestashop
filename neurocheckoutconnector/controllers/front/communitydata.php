@@ -5,6 +5,8 @@ use NeuroCheckout\Community\ReconciledSourceExporter;
 use NeuroCheckout\Community\PrestashopSourceSnapshot;
 use NeuroCheckout\Community\AutomaticSourceBinding;
 use NeuroCheckout\Community\PrestashopSourceDirectory;
+use NeuroCheckout\Community\PrestashopCustomerOrderHistory;
+use NeuroCheckout\Community\PrestashopCustomerProductPrices;
 use NeuroCheckout\Security\SecretConfiguration;
 
 /** Dedicated, disabled-by-default staging endpoint; never uses the Cloud API key. */
@@ -44,12 +46,23 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
                 exit;
             }
         }
+        $raw = SourcePullGateway::requestBody();
         [$status, $headers, $body] = SourcePullGateway::handle(
             'prestashop', (int) $this->context->shop->id, _PS_ROOT_DIR_,
             (string) ($_SERVER['REQUEST_METHOD'] ?? ''), (string) ($_SERVER['REQUEST_URI'] ?? ''),
-            SourcePullGateway::serverHeaders($_SERVER), SourcePullGateway::requestBody(),
+            SourcePullGateway::serverHeaders($_SERVER), $raw,
             Tools::usingSecureMode(),
-            static function (array $input, int $scope, array $configuration, string $directory): array {
+            static function (array $input, int $scope, array $configuration, string $directory) use ($raw): array {
+                if (($input['operation'] ?? null) === 'customer_prices') {
+                    return ['schema' => 1, 'shopId' => $input['shopId'], 'operation' => 'customer_prices',
+                        'requestHash' => hash('sha256', $raw), 'prices' => (new PrestashopCustomerProductPrices())
+                            ->read($scope, (int) $input['customerId'], $input['customerEmail'], $input['productIds'], $input['currency'])];
+                }
+                if (($input['operation'] ?? null) === 'customer_history') {
+                    return ['schema' => 1, 'shopId' => $input['shopId'], 'operation' => 'customer_history',
+                        'requestHash' => hash('sha256', $raw), 'history' => PrestashopCustomerOrderHistory::fromRuntime($scope)
+                            ->read($scope, (int) $input['customerId'], $input['customerEmail'])];
+                }
                 $exporter = new ReconciledSourceExporter($directory, $configuration, static function () use ($scope): array {
                     return PrestashopSourceSnapshot::fromRuntime()->capture($scope);
                 });

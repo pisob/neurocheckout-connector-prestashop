@@ -1,6 +1,71 @@
 # NeuroCheckout Connector for PrestaShop
 
+Version 4.6.10 delivers native account/consent facts and bounded recipient-price and order-history reads for matching Community/Cloud support. Existing customer consent is preserved. Independent recommendation campaigns remain incomplete and are not enabled by installing this release.
+
+## Native recipient prices (4.6.10)
+
+With matching Community and Cloud candidates, the signed source now returns
+native one-unit offers for a registered customer in the current shop. It uses
+the customer's group, first native tax address and explicit shop currency;
+native tax display precision and the exact default combination are preserved.
+Shipping, cart vouchers and checkout totals are outside this contract. No
+browser session, customer login, cart, consent or order is changed.
+
+The reader qualifies native PrestaShop 1.7.8.x and was compared with
+1.7.8.11/PHP 7.4. It requires InnoDB pricing tables and an owned read-only
+consistent transaction. Unsupported overrides/custom tax or price hooks,
+preinitialized pricing, incomplete fiscal context, packs/customization,
+unsuitable minimum quantities and unavailable default-combination stock are
+refused. There is no catalog base-price fallback. Requests contain at most 16
+products; responses are limited to 16 KiB with 15-second freshness. SQL and lock
+waits are bounded to one second within a three-second cooperative read budget.
+
+Checks include 58 protocol/gateway and 69 disposable native-schema assertions
+with API doubles on PHP 7.4/8.3, and eight actual native offers. The
+optional `neurocheckoutconnector/tests/customer_price_runtime_probe.php` is
+restricted to the dedicated local 1.7.8.11 fixture and requires
+`NC_PS17_PRICE_PROBE=1`. Two signed candidate Community reads and private Cloud
+validation passed, with replay rejection and no catalog/outbox persistence.
+This is not a live HTTPS or email-delivery test. Final sending-policy and price
+checks remain required. Installing this reader does not enable independent recommendation campaigns.
+
+## Native account history (4.6.10)
+
+With matching Community and Cloud candidates, the signed source can read a
+complete native account order history independently of retained carts. It binds
+the active registered customer, email and current shop; it does not borrow guest
+or other-shop orders. Native newsletter state is read without changing it.
+The bounded, read-only repeatable-read transaction requires InnoDB and retains
+metadata locks. More than 128 orders, 128 payments, 128 credit notes, 512 combined
+lines or 64,000 bytes is unavailable, never silently truncated. SQL statements
+and lock waits are bounded to one second, with a three-second cooperative budget.
+
+Payments can span split orders: each payment appears once with its native order
+relations, without an invented per-order allocation. Order totals, native paid
+fields, state flags, credits and returned/refunded quantities remain separate
+facts. A credit note does not establish a bank refund. Local native timestamps
+are retained with the current runtime timezone, not claimed as proven historic
+UTC. No address, name, payment method, card or transaction details are returned.
+The existing HTTPS/HMAC, replay and rate guards apply; responses bind the exact
+request, expire after 15 seconds, and are not cached or stored in the local vault.
+
+Checks: 83 protocol and 58 disposable native SQL assertions on PHP 7.4/8.3,
+including shared payments, foreign references, consent withdrawal during a
+snapshot, schema/engine failures, capacity limits and caller transaction safety.
+Native read-only comparison and the candidate Community bridge are additional
+checks, not live HTTPS or delivered-email tests. This does not activate campaigns
+or change installed stores. See the signed release below for installation.
+
 ## Customer identity in Community
+
+Local snapshots now include the native newsletter preference for an
+active, non-deleted customer belonging to this shop. Partner-offer opt-in, cart
+creation and billing email are not substitutes. Consent from another shop is not
+inherited, and unknown evidence blocks recommendations. The exporter never opts
+customers in or invents consent timestamps. Cloud must recheck this state plus
+unsubscribe and delivery policies before sending. This does not activate campaigns.
+The disposable SQL regression retains the released shop-specific cover-image
+selection alongside consent, scope and transaction tests.
 
 Cart snapshots preserve the customer's native guest status. A customer ID or
 email alone is not proof of registration. Missing customer records remain
@@ -14,10 +79,10 @@ NeuroCheckout Community.
 
 ## Download
 
-The current installable connector is `v4.6.9`:
+The current installable connector is `v4.6.10`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.9/neurocheckoutconnector-prestashop-4.6.9.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.9)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.10/neurocheckoutconnector-prestashop-4.6.10.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.10)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
@@ -63,7 +128,7 @@ and the ZIP checksum reports `OK`.
    Migration requires the existing state; it cannot reconstruct deleted cursors.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.9.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.10.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store
