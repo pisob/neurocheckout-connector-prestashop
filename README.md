@@ -1,5 +1,32 @@
 # NeuroCheckout Connector for PrestaShop
 
+## Native recipient prices (candidate)
+
+With matching Community and Cloud candidates, the signed source now returns
+native one-unit offers for a registered customer in the current shop. It uses
+the customer's group, first native tax address and explicit shop currency;
+native tax display precision and the exact default combination are preserved.
+Shipping, cart vouchers and checkout totals are outside this contract. No
+browser session, customer login, cart, consent or order is changed.
+
+The reader qualifies native PrestaShop 1.7.8.x and was compared with
+1.7.8.11/PHP 7.4. It requires InnoDB pricing tables and an owned read-only
+consistent transaction. Unsupported overrides/custom tax or price hooks,
+preinitialized pricing, incomplete fiscal context, packs/customization,
+unsuitable minimum quantities and unavailable default-combination stock are
+refused. There is no catalog base-price fallback. Requests contain at most 16
+products; responses are limited to 16 KiB with 15-second freshness. SQL and lock
+waits are bounded to one second within a three-second cooperative read budget.
+
+Checks include 58 protocol/gateway and 69 disposable native-schema assertions
+with API doubles on PHP 7.4/8.3, and eight actual native offers. The
+optional `neurocheckoutconnector/tests/customer_price_runtime_probe.php` is
+restricted to the dedicated local 1.7.8.11 fixture and requires
+`NC_PS17_PRICE_PROBE=1`. Two signed candidate Community reads and private Cloud
+validation passed, with replay rejection and no catalog/outbox persistence.
+This is not a live HTTPS or email-delivery test. Final sending-policy and price
+checks remain required. The installed module and stable download are unchanged.
+
 ## Native account history (candidate)
 
 With matching Community and Cloud candidates, the signed source can read a

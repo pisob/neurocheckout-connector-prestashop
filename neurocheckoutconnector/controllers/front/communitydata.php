@@ -6,6 +6,7 @@ use NeuroCheckout\Community\PrestashopSourceSnapshot;
 use NeuroCheckout\Community\AutomaticSourceBinding;
 use NeuroCheckout\Community\PrestashopSourceDirectory;
 use NeuroCheckout\Community\PrestashopCustomerOrderHistory;
+use NeuroCheckout\Community\PrestashopCustomerProductPrices;
 use NeuroCheckout\Security\SecretConfiguration;
 
 /** Dedicated, disabled-by-default staging endpoint; never uses the Cloud API key. */
@@ -52,6 +53,11 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
             SourcePullGateway::serverHeaders($_SERVER), $raw,
             Tools::usingSecureMode(),
             static function (array $input, int $scope, array $configuration, string $directory) use ($raw): array {
+                if (($input['operation'] ?? null) === 'customer_prices') {
+                    return ['schema' => 1, 'shopId' => $input['shopId'], 'operation' => 'customer_prices',
+                        'requestHash' => hash('sha256', $raw), 'prices' => (new PrestashopCustomerProductPrices())
+                            ->read($scope, (int) $input['customerId'], $input['customerEmail'], $input['productIds'], $input['currency'])];
+                }
                 if (($input['operation'] ?? null) === 'customer_history') {
                     return ['schema' => 1, 'shopId' => $input['shopId'], 'operation' => 'customer_history',
                         'requestHash' => hash('sha256', $raw), 'history' => PrestashopCustomerOrderHistory::fromRuntime($scope)

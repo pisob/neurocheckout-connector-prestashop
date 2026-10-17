@@ -7,6 +7,7 @@ namespace NeuroCheckout\Community;
 use RuntimeException;
 
 require_once __DIR__ . '/PrestashopCustomerHistoryProtocol.php';
+require_once __DIR__ . '/PrestashopCustomerPriceProtocol.php';
 
 /** Dedicated source-pull authentication, separate from the legacy Cloud API. */
 final class SourcePullProtocol
@@ -59,6 +60,10 @@ final class SourcePullProtocol
         if (is_array($input) && ($input['operation'] ?? null) === 'customer_history') {
             if (self::platformForPath($path) !== 'prestashop') { throw new RuntimeException('source_invalid'); }
             try { PrestashopCustomerHistoryProtocol::request($input, $shopId); }
+            catch (\Throwable $error) { throw new RuntimeException('source_invalid'); }
+        } elseif (is_array($input) && ($input['operation'] ?? null) === 'customer_prices') {
+            if (self::platformForPath($path) !== 'prestashop') { throw new RuntimeException('source_invalid'); }
+            try { PrestashopCustomerPriceProtocol::request($input, $shopId); }
             catch (\Throwable $error) { throw new RuntimeException('source_invalid'); }
         } elseif (!is_array($input) || !self::keys($input, ['schema', 'shopId', 'streamId', 'cursor', 'limit'])
             || $input['schema'] !== 1 || $input['shopId'] !== $shopId || $input['limit'] !== self::MAX_RECORDS
