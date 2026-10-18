@@ -53,6 +53,10 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
             SourcePullGateway::serverHeaders($_SERVER), $raw,
             Tools::usingSecureMode(),
             static function (array $input, int $scope, array $configuration, string $directory) use ($raw): array {
+                if (($input['operation'] ?? null)==='customer_history_index') {
+                    return ['schema'=>1,'shopId'=>$input['shopId'],'operation'=>'customer_history_index',
+                        'requestHash'=>hash('sha256',$raw),'index'=>PrestashopCustomerOrderHistory::fromRuntime($scope)->index($scope,$input)];
+                }
                 if (($input['operation'] ?? null) === 'customer_prices') {
                     return ['schema' => 1, 'shopId' => $input['shopId'], 'operation' => 'customer_prices',
                         'requestHash' => hash('sha256', $raw), 'prices' => (new PrestashopCustomerProductPrices())

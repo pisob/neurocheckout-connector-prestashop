@@ -1,5 +1,22 @@
 # NeuroCheckout Connector for PrestaShop
 
+## Scheduled local order history
+
+The signed `customer_history_index` operation discovers registered native accounts
+with orders, including accounts whose checkout cart no longer exists. It pages
+eight accounts at a time within the configured native store; a fixed account-ID
+ceiling prevents new arrivals from changing a running pass. Community retrieves
+each account through the existing authenticated history reader and stores the
+result in its encrypted local vault. The first complete source synchronization
+starts the initial pass; subsequent passes are due seven days after completion.
+Failed accounts retain their cursor and retry; a partial pass is never reported
+as complete. Installing this connector does not enable email campaigns.
+
+The existing history contract covers registered accounts only (not guest orders),
+with a maximum of 128 orders, 512 lines and 64 KiB per account. Overflow fails
+explicitly, without truncation. Orders retain their native payment/refund facts.
+
+
 ## Native history v2 (4.6.11)
 
 The signed account-history response adds nullable `discount_total` to every
@@ -34,7 +51,7 @@ including PHP 7.4 on the pinned PrestaShop image, plus existing validator and SQ
 regressions. Installed-store HTTP and real recommendation delivery remain separate
 acceptance work. Canonical source only; do not synchronize the installed module.
 
-Version 4.6.11 delivers native account/consent facts and bounded recipient-price and order-history reads for matching Community/Cloud support. Existing customer consent is preserved. Independent campaigns are controlled by the coordinated Cloud worker; installing this connector never enables sending or changes consent.
+Version 4.6.12 delivers native account/consent facts and bounded recipient-price and order-history reads for matching Community/Cloud support. Existing customer consent is preserved. Independent campaigns are controlled by the coordinated Cloud worker; installing this connector never enables sending or changes consent.
 
 ## Native recipient prices (4.6.11)
 
@@ -113,10 +130,10 @@ NeuroCheckout Community.
 
 ## Download
 
-The current installable connector is `v4.6.11`:
+The current installable connector is `v4.6.12`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.11/neurocheckoutconnector-prestashop-4.6.11.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.11)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.12/neurocheckoutconnector-prestashop-4.6.12.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.12)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
@@ -162,7 +179,7 @@ and the ZIP checksum reports `OK`.
    Migration requires the existing state; it cannot reconstruct deleted cursors.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.11.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.12.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store

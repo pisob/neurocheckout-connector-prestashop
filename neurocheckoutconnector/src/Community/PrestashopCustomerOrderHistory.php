@@ -41,6 +41,13 @@ final class PrestashopCustomerOrderHistory
             [PDO::ATTR_TIMEOUT=>2,PDO::MYSQL_ATTR_MULTI_STATEMENTS=>false]),(string)_DB_PREFIX_,$scope,date_default_timezone_get());
     }
 
+    public function index(int $scope, array $input): array
+    {
+        require_once __DIR__ . '/CustomerHistoryIndex.php';
+        if ($scope!==$this->scope) { self::fail(); }
+        return CustomerHistoryIndex::read($this->db,'prestashop',$this->prefix,$scope,$input);
+    }
+
     public function read(int $scope,int $customer,string $email,bool $activeCarts=false): array
     {
         $owned=false;
