@@ -58,6 +58,11 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
                         'requestHash' => hash('sha256', $raw), 'prices' => (new PrestashopCustomerProductPrices())
                             ->read($scope, (int) $input['customerId'], $input['customerEmail'], $input['productIds'], $input['currency'])];
                 }
+                if (($input['operation'] ?? null) === 'customer_carts') {
+                    return ['schema'=>1,'shopId'=>$input['shopId'],'operation'=>'customer_carts',
+                        'requestHash'=>hash('sha256',$raw),'carts'=>PrestashopCustomerOrderHistory::fromRuntime($scope)
+                            ->read($scope,(int)$input['customerId'],$input['customerEmail'],true)];
+                }
                 if (($input['operation'] ?? null) === 'customer_history') {
                     return ['schema' => 1, 'shopId' => $input['shopId'], 'operation' => 'customer_history',
                         'requestHash' => hash('sha256', $raw), 'history' => PrestashopCustomerOrderHistory::fromRuntime($scope)

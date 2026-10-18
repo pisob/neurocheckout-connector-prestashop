@@ -5,6 +5,8 @@ namespace NeuroCheckout\Community;
 use PDO;
 use RuntimeException;
 
+require_once __DIR__ . '/CustomerCartsProtocol.php';
+
 /** Complete bounded native facts, independent of surviving checkout carts. */
 final class PrestashopCustomerOrderHistory
 {
@@ -39,7 +41,7 @@ final class PrestashopCustomerOrderHistory
             [PDO::ATTR_TIMEOUT=>2,PDO::MYSQL_ATTR_MULTI_STATEMENTS=>false]),(string)_DB_PREFIX_,$scope,date_default_timezone_get());
     }
 
-    public function read(int $scope,int $customer,string $email): array
+    public function read(int $scope,int $customer,string $email,bool $activeCarts=false): array
     {
         $owned=false;
         try {
@@ -52,7 +54,7 @@ final class PrestashopCustomerOrderHistory
             $this->db->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
             $this->db->exec('SET TRANSACTION READ ONLY');
             $this->db->beginTransaction(); $owned=true;
-            $this->engines();
+            $this->engines($activeCarts ? ['shop','customer','cart','cart_product','orders'] : self::TABLES);
             $shops=$this->rows('SELECT id_shop_group FROM '.$this->table('shop').' WHERE id_shop=? AND active=1 AND deleted=0',[$scope],1);
             if (count($shops)!==1) { self::fail(); }
             $group=(int)$shops[0]['id_shop_group'];
@@ -60,6 +62,28 @@ final class PrestashopCustomerOrderHistory
                 .' WHERE id_customer=? AND id_shop=? AND id_shop_group=? AND active=1 AND deleted=0 AND is_guest=0',[$customer,$scope,$group],1);
             if (count($people)!==1 || strcasecmp($people[0]['email'],$email)!==0) { self::fail(); }
             $person=$people[0];
+            if ($activeCarts) {
+                $carts=$this->rows('SELECT id_cart,id_shop_group FROM '.$this->table('cart').' c'
+                    .' WHERE c.id_shop=? AND c.id_customer=? AND NOT EXISTS (SELECT 1 FROM '.$this->table('orders')
+                    .' o WHERE o.id_cart=c.id_cart) ORDER BY c.id_cart',[$scope,$customer],128);
+                $ids=[];
+                foreach ($carts as $cart) {
+                    if ((int)$cart['id_shop_group']!==$group) { self::fail(); }
+                    $ids[]=$cart['id_cart'];
+                }
+                $lines=$ids ? $this->rows('SELECT id_shop,CAST(quantity AS CHAR) quantity FROM '.$this->table('cart_product')
+                    .' WHERE id_cart IN ('.$this->in($ids).')', $ids,512) : [];
+                $active=false;
+                foreach ($lines as $line) {
+                    if ((int)$line['id_shop']!==$scope || !is_string($line['quantity'])
+                        || !preg_match('/^(?:0|[1-9][0-9]{0,9})$/D',$line['quantity'])) { self::fail(); }
+                    $active=$active || (int)$line['quantity']>0;
+                }
+                $consent=(string)$person['newsletter'];
+                $result=CustomerCartsProtocol::result(['nativeShopId'=>(string)$scope,'customerId'=>(string)$customer,
+                    'customerEmail'=>$person['email']],$active,$consent==='1'?'granted':($consent==='0'?'denied':'unknown'));
+                $this->checkTime(); return $result;
+            }
             $orders=$this->rows('SELECT CAST(o.id_order AS CHAR) order_id,o.reference,CAST(o.current_state AS CHAR) current_state_id,'
                 .'s.paid state_paid,s.logable state_logable,o.valid,o.date_add created_at,o.date_upd updated_at,c.iso_code currency,'
                 .'CAST(o.total_paid_tax_incl AS CHAR) total_paid_tax_incl,CAST(o.total_paid_real AS CHAR) total_paid_real,o.id_shop_group FROM '
@@ -171,9 +195,9 @@ final class PrestashopCustomerOrderHistory
 
     private function flag($v,bool $nullable): ?bool
     { if ($v===null && $nullable) { return null; } if (!in_array((string)$v,['0','1'],true)) { self::fail(); } return (string)$v==='1'; }
-    private function engines(): void
+    private function engines(array $tables): void
     {
-        $names=array_map(function($name){return $this->prefix.$name;},self::TABLES);
+        $names=array_map(function($name){return $this->prefix.$name;},$tables);
         foreach ($names as $name) { $this->rows('SELECT 1 FROM `'.$name.'` WHERE 1=0',[],0); }
         $rows=$this->rows('SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('
             .$this->in($names).')',$names,count($names));

@@ -42,4 +42,5 @@ for test in ["neurocheckoutconnector/tests/customer_price_protocol_test.php", "n
     subprocess.run(["php", str(root / test)], cwd=root, check=True, timeout=60)
 subprocess.run(["php", "-n", str(root / "neurocheckoutconnector/tests/runtime_bootstrap_test.php")],
                cwd=root, check=True, timeout=60)
+subprocess.run(["php", str(root / "neurocheckoutconnector/tests/customer_carts_protocol_test.php")], cwd=root, check=True, timeout=60)
 print("All PHP files linted; isolated tests passed. Real platform integration is not covered.")

@@ -1,5 +1,28 @@
 # NeuroCheckout Connector for PrestaShop
 
+## Native account carts (candidate, 2026-10-18)
+
+The signed `customer_carts` operation reads unconverted carts for the exact
+registered customer/shop/group, including current account and newsletter state.
+A positive native cart-product quantity means a persisted active cart; converted
+and empty carts do not. No age heuristic hides an old unfinished cart. Other
+accounts/shops, anonymous carts and uncommitted browser state are not borrowed.
+
+Reads use an owned read-only repeatable InnoDB snapshot, bounded SQL/lock waits
+and a three-second cooperative budget, with at most 128 carts and 512 lines.
+Malformed/foreign rows, partial schemas, nontransactional tables and overflow
+fail closed. Only identity, consent, completeness, read time and cart presence
+leave the reader; cart lines stay native. Existing source HMAC/nonces/HTTPS apply
+with 4 KiB response and 15-second freshness bounds. No customer session, cart,
+order or consent is modified.
+
+The unreleased operation requires matching candidate Community/Cloud support;
+it does not enable independent sending or provide atomic checkout/SMTP coordination.
+Validation: 37 signed protocol assertions and 29 real disposable SQL assertions,
+including PHP 7.4 on the pinned PrestaShop image, plus existing validator and SQL
+regressions. Installed-store HTTP and real recommendation delivery remain separate
+acceptance work. Canonical source only; do not synchronize the installed module.
+
 Version 4.6.10 delivers native account/consent facts and bounded recipient-price and order-history reads for matching Community/Cloud support. Existing customer consent is preserved. Independent recommendation campaigns remain incomplete and are not enabled by installing this release.
 
 ## Native recipient prices (4.6.10)
