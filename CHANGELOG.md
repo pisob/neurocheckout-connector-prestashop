@@ -1,3 +1,9 @@
+## 4.6.11
+
+- Add signed native account-cart presence and history v2 discount evidence.
+- Keep native facts bounded, read-only, scoped and compatible with v1 validation.
+- Require coordinated Community/Cloud support; no automatic consent or sender activation.
+
 # Changelog
 
 ## 4.6.9

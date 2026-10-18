@@ -18,6 +18,10 @@ $input=['schema'=>1,'shopId'=>'synthetic-shop','operation'=>'customer_history','
     'customerId'=>'47','customerEmail'=>'reader@example.invalid'];
 $history=prestaHistoryFixture(); Protocol::request($input,'synthetic-shop');Protocol::history($history,$input);
 hcheck(true,'native facts accepted without paid inference');
+$v2=$history;$v2['schema']='prestashop-customer-history-v2';
+foreach([null,'0','7.12500000'] as $discount){$v2['orders'][0]['discount_total']=$discount;Protocol::history($v2,$input);hcheck(true,'v2 discount preserved');}
+foreach([true,2,'-1','1e2',str_repeat('9',27)] as $discount){$bad=$v2;$bad['orders'][0]['discount_total']=$discount;hreject(static function()use($bad,$input){Protocol::history($bad,$input);},'invalid v2 discount');}
+$bad=$v2;unset($bad['orders'][0]['discount_total']);hreject(static function()use($bad,$input){Protocol::history($bad,$input);},'missing v2 discount');
 foreach (['schema'=>2,'shopId'=>'other','operation'=>'other','nativeShopId'=>'02','customerId'=>47,'customerEmail'=>"bad\n@example.invalid",'url'=>'https://other.invalid'] as $k=>$v) {
     $bad=array_replace($input,[$k=>$v]);hreject(static function()use($bad){Protocol::request($bad,'synthetic-shop');},'request '.$k);
 }

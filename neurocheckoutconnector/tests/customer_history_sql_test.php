@@ -34,7 +34,7 @@ try {
         'customer'=>'id_customer INT PRIMARY KEY,id_shop INT,id_shop_group INT,email VARCHAR(254),date_add DATETIME,newsletter INT,active INT,deleted INT,is_guest INT',
         'currency'=>'id_currency INT PRIMARY KEY,iso_code VARCHAR(3)',
         'order_state'=>'id_order_state INT PRIMARY KEY,paid INT,logable INT',
-        'orders'=>'id_order INT PRIMARY KEY,id_shop INT,id_shop_group INT,id_customer INT,reference VARCHAR(64),current_state INT,valid INT,date_add DATETIME,date_upd DATETIME,id_currency INT,total_paid_tax_incl DECIMAL(20,6),total_paid_real DECIMAL(20,6)',
+        'orders'=>'id_order INT PRIMARY KEY,id_shop INT,id_shop_group INT,id_customer INT,reference VARCHAR(64),current_state INT,valid INT,date_add DATETIME,date_upd DATETIME,id_currency INT,total_paid_tax_incl DECIMAL(20,6),total_paid_real DECIMAL(20,6),total_discounts_tax_incl DECIMAL(20,6) DEFAULT 0',
         'order_detail'=>'id_order_detail INT PRIMARY KEY,id_order INT,id_shop INT,product_id INT,product_attribute_id INT,product_quantity INT,product_quantity_refunded INT,product_quantity_return INT,total_price_tax_incl DECIMAL(20,6),total_price_tax_excl DECIMAL(20,6)',
         'order_slip'=>'id_order_slip INT PRIMARY KEY,id_order INT,id_customer INT,date_add DATETIME,date_upd DATETIME,order_slip_type INT,total_products_tax_incl DECIMAL(20,6),total_shipping_tax_incl DECIMAL(20,6)',
         'order_slip_detail'=>'id_order_slip INT,id_order_detail INT,product_quantity INT,amount_tax_incl DECIMAL(20,6),amount_tax_excl DECIMAL(20,6)',
@@ -48,7 +48,7 @@ try {
         "INSERT INTO ps_customer VALUES (47,2,1,'reader@example.invalid','2019-12-01',1,1,0,0),(48,3,2,'foreign@example.invalid','2019-12-01',1,1,0,0),(49,2,1,'empty@example.invalid','2019-12-01',0,1,0,0)",
         "INSERT INTO ps_currency VALUES (1,'EUR'),(2,'USD')",
         "INSERT INTO ps_order_state VALUES (3,0,0),(4,1,1)",
-        "INSERT INTO ps_orders VALUES (31,2,1,47,'SPLIT',3,0,'2020-01-01','2020-01-02',1,48.125,0),(32,2,1,47,'SPLIT',4,1,'2020-01-01','2020-01-02',1,24,12),(33,3,2,47,'OTHER',4,1,'2020-01-01','2020-01-02',1,999,999),(34,2,1,48,'OTHER2',4,1,'2020-01-01','2020-01-02',1,999,999)",
+        "INSERT INTO ps_orders (id_order,id_shop,id_shop_group,id_customer,reference,current_state,valid,date_add,date_upd,id_currency,total_paid_tax_incl,total_paid_real) VALUES (31,2,1,47,'SPLIT',3,0,'2020-01-01','2020-01-02',1,48.125,0),(32,2,1,47,'SPLIT',4,1,'2020-01-01','2020-01-02',1,24,12),(33,3,2,47,'OTHER',4,1,'2020-01-01','2020-01-02',1,999,999),(34,2,1,48,'OTHER2',4,1,'2020-01-01','2020-01-02',1,999,999)",
         "INSERT INTO ps_order_detail VALUES (41,31,2,10,11,2,1,0,48.125,40.1),(42,32,2,10,12,1,0,0,24,20),(43,33,3,99,0,1,0,0,999,999)",
         "INSERT INTO ps_order_slip VALUES (51,31,47,'2020-01-02','2020-01-02',1,24.0625,0)",
         "INSERT INTO ps_order_slip_detail VALUES (51,41,1,24.0625,20.05)",
@@ -59,6 +59,10 @@ try {
     $reader=new PrestashopCustomerOrderHistory($readerDb,'ps_',2,'Europe/Paris');
     $read=static function()use($reader){return $reader->read(2,47,'reader@example.invalid');};
     $h=$read();
+    scheck($h['schema']==='prestashop-customer-history-v2' && $h['orders'][0]['discount_total']==='0.000000','native zero discount retained');
+    $writer->exec('UPDATE ps_orders SET total_discounts_tax_incl=7.125 WHERE id_order=31');
+    scheck($read()['orders'][0]['discount_total']==='7.125000','native discount retains decimal precision');
+    $writer->exec('UPDATE ps_orders SET total_discounts_tax_incl=0 WHERE id_order=31');
     scheck($h['order_count']===2&&array_column($h['orders'],'order_id')===['31','32'],'all own orders independent of absent cart tables');
     scheck($h['orders'][0]['total_paid_tax_incl']==='48.125000'&&$h['orders'][0]['total_paid_real']==='0.000000','native order total not conflated with paid');
     scheck($h['orders'][0]['state_paid']===false&&$h['orders'][1]['state_paid']===true,'native state flags separate from money');
@@ -109,7 +113,7 @@ try {
     };
     $read();$writer->exec('ALTER TABLE ps_order_slip ENGINE=MyISAM');sreject($read,'nontransactional table rejected');$writer->exec('ALTER TABLE ps_order_slip ENGINE=InnoDB');
     $writer->exec('RENAME TABLE ps_order_slip TO ps_order_slip_missing');sreject($read,'missing native table refused');$writer->exec('RENAME TABLE ps_order_slip_missing TO ps_order_slip');
-    $insert=$writer->prepare("INSERT INTO ps_orders SELECT ?,2,1,47,?,3,0,'2020-01-01','2020-01-02',1,1,0");
+    $insert=$writer->prepare("INSERT INTO ps_orders (id_order,id_shop,id_shop_group,id_customer,reference,current_state,valid,date_add,date_upd,id_currency,total_paid_tax_incl,total_paid_real) SELECT ?,2,1,47,?,3,0,'2020-01-01','2020-01-02',1,1,0");
     for($i=100;$i<227;$i++)$insert->execute([$i,'EXTRA'.$i]);sreject($read,'order count never truncated');
     $writer->exec('DELETE FROM ps_orders WHERE id_order>=100');
     for($i=100;$i<227;$i++)$writer->exec("INSERT INTO ps_order_payment VALUES ($i,'SPLIT','2020-01-02',1,1,1)");sreject($read,'payments never truncated');

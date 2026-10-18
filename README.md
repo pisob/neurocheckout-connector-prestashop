@@ -1,6 +1,17 @@
 # NeuroCheckout Connector for PrestaShop
 
-## Native account carts (candidate, 2026-10-18)
+## Native history v2 (4.6.11)
+
+The signed account-history response adds nullable `discount_total` to every
+order. Native discounts retain decimal precision; unavailable values stay null.
+PrestaShop exports native tax-inclusive discounts, WooCommerce exports its native
+order discount field (HPOS/posts), and Magento exports the magnitude of its signed
+native discount. No paid/refunded value or preference is invented by the connector.
+Older v1 history remains valid for compatible readers, with discount evidence
+unknown. Use Community preview.43 and the coordinated Cloud release. Existing
+native-cart, consent, transaction, size and timing guards still apply.
+
+## Native account carts (4.6.11)
 
 The signed `customer_carts` operation reads unconverted carts for the exact
 registered customer/shop/group, including current account and newsletter state.
@@ -16,16 +27,16 @@ leave the reader; cart lines stay native. Existing source HMAC/nonces/HTTPS appl
 with 4 KiB response and 15-second freshness bounds. No customer session, cart,
 order or consent is modified.
 
-The unreleased operation requires matching candidate Community/Cloud support;
+This operation requires matching Community preview.43 and coordinated Cloud support;
 it does not enable independent sending or provide atomic checkout/SMTP coordination.
 Validation: 37 signed protocol assertions and 29 real disposable SQL assertions,
 including PHP 7.4 on the pinned PrestaShop image, plus existing validator and SQL
 regressions. Installed-store HTTP and real recommendation delivery remain separate
 acceptance work. Canonical source only; do not synchronize the installed module.
 
-Version 4.6.10 delivers native account/consent facts and bounded recipient-price and order-history reads for matching Community/Cloud support. Existing customer consent is preserved. Independent recommendation campaigns remain incomplete and are not enabled by installing this release.
+Version 4.6.11 delivers native account/consent facts and bounded recipient-price and order-history reads for matching Community/Cloud support. Existing customer consent is preserved. Independent campaigns are controlled by the coordinated Cloud worker; installing this connector never enables sending or changes consent.
 
-## Native recipient prices (4.6.10)
+## Native recipient prices (4.6.11)
 
 With matching Community and Cloud candidates, the signed source now returns
 native one-unit offers for a registered customer in the current shop. It uses
@@ -52,7 +63,7 @@ validation passed, with replay rejection and no catalog/outbox persistence.
 This is not a live HTTPS or email-delivery test. Final sending-policy and price
 checks remain required. Installing this reader does not enable independent recommendation campaigns.
 
-## Native account history (4.6.10)
+## Native account history (4.6.11)
 
 With matching Community and Cloud candidates, the signed source can read a
 complete native account order history independently of retained carts. It binds
@@ -102,10 +113,10 @@ NeuroCheckout Community.
 
 ## Download
 
-The current installable connector is `v4.6.10`:
+The current installable connector is `v4.6.11`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.10/neurocheckoutconnector-prestashop-4.6.10.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.10)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.11/neurocheckoutconnector-prestashop-4.6.11.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.11)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
@@ -151,7 +162,7 @@ and the ZIP checksum reports `OK`.
    Migration requires the existing state; it cannot reconstruct deleted cursors.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.10.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.11.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store

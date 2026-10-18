@@ -86,7 +86,8 @@ final class PrestashopCustomerOrderHistory
             }
             $orders=$this->rows('SELECT CAST(o.id_order AS CHAR) order_id,o.reference,CAST(o.current_state AS CHAR) current_state_id,'
                 .'s.paid state_paid,s.logable state_logable,o.valid,o.date_add created_at,o.date_upd updated_at,c.iso_code currency,'
-                .'CAST(o.total_paid_tax_incl AS CHAR) total_paid_tax_incl,CAST(o.total_paid_real AS CHAR) total_paid_real,o.id_shop_group FROM '
+                .'CAST(o.total_paid_tax_incl AS CHAR) total_paid_tax_incl,CAST(o.total_paid_real AS CHAR) total_paid_real,'
+                .'CAST(o.total_discounts_tax_incl AS CHAR) discount_total,o.id_shop_group FROM '
                 .$this->table('orders').' o LEFT JOIN '.$this->table('currency').' c ON c.id_currency=o.id_currency LEFT JOIN '
                 .$this->table('order_state').' s ON s.id_order_state=o.current_state WHERE o.id_customer=? AND o.id_shop=? ORDER BY o.id_order',[$customer,$scope],128);
             $ids=array_column($orders,'order_id'); $references=[];
@@ -102,7 +103,7 @@ final class PrestashopCustomerOrderHistory
             foreach ($orders as &$order) { $order['items']=$items[$order['order_id']]??[]; $order['credit_slips']=$slips[$order['order_id']]??[]; }
             unset($order);
             $consent=(string)$person['newsletter'];
-            $result=['schema'=>'prestashop-customer-history-v1','native_shop_id'=>$scope,'customer_id'=>$customer,
+            $result=['schema'=>'prestashop-customer-history-v2','native_shop_id'=>$scope,'customer_id'=>$customer,
                 'customer_email'=>$person['email'],'customer_created_at'=>$person['date_add'],'native_timezone'=>$this->timezone,
                 'read_at'=>gmdate('Y-m-d\TH:i:s\Z'),'complete'=>true,'order_count'=>count($orders),'orders'=>$orders,
                 'payments'=>$this->payments($references,$scope,$customer),

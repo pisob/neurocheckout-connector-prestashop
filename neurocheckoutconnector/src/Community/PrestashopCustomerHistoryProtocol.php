@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 namespace NeuroCheckout\Community;
+require_once __DIR__ . '/NativeHistoryV2.php';
 
 /** Native account facts, not proof that an order or credit note was settled. */
 final class PrestashopCustomerHistoryProtocol
@@ -25,6 +26,7 @@ final class PrestashopCustomerHistoryProtocol
 
     public static function history($h, array $input): void
     {
+        $h=NativeHistoryV2::legacy($h,'prestashop-customer-history-v1');
         if (!self::keys($h,['schema','native_shop_id','customer_id','customer_email','customer_created_at',
                 'native_timezone','read_at','complete','order_count','orders','payments','marketing_consent'])
             || $h['schema']!=='prestashop-customer-history-v1' || $h['complete']!==true
