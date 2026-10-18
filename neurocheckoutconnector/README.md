@@ -1,5 +1,16 @@
 # NeuroCheckout Connector for PrestaShop
 
+## Native history v2 (4.6.11)
+
+The signed account-history response adds nullable `discount_total` to every
+order. Native discounts retain decimal precision; unavailable values stay null.
+PrestaShop exports native tax-inclusive discounts, WooCommerce exports its native
+order discount field (HPOS/posts), and Magento exports the magnitude of its signed
+native discount. No paid/refunded value or preference is invented by the connector.
+Older v1 history remains valid for compatible readers, with discount evidence
+unknown. Use Community preview.43 and the coordinated Cloud release. Existing
+native-cart, consent, transaction, size and timing guards still apply.
+
 Version 4.6.8 fixes Community snapshot transactions on PrestaShop 1.7.8.11
 with PHP 7.4 and reports missing runtime requirements without breaking the
 configuration page. Website and scheduled tasks must use compatible PHP versions.
