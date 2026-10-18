@@ -43,3 +43,9 @@ docker run --rm --network none --entrypoint php \
   -v "$PWD:/release:ro" -v "$fixture_dir:$fixture_dir" -w /release \
   prestashop/prestashop@sha256:1281525e9518e1e34869af813e3b3d71ccf8cfb94ed8ffb398d050379c79edbb \
   neurocheckoutconnector/tests/customer_carts_sql_test.php "$fixture_dir/mariadb.sock"
+
+php tests/history_index_sql_test.php "$fixture_dir/mariadb.sock"
+docker run --rm --network none --entrypoint php \
+  -v "$PWD:/release:ro" -v "$fixture_dir:$fixture_dir" -w /release \
+  prestashop/prestashop@sha256:1281525e9518e1e34869af813e3b3d71ccf8cfb94ed8ffb398d050379c79edbb \
+  tests/history_index_sql_test.php "$fixture_dir/mariadb.sock"

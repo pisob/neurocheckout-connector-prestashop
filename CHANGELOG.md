@@ -1,3 +1,7 @@
+## 4.6.12
+
+- Add signed, bounded native account discovery for initial and weekly local history synchronization.
+
 ## 4.6.11
 
 - Add signed native account-cart presence and history v2 discount evidence.

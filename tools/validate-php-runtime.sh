@@ -9,7 +9,7 @@ done
 for test in neurocheckoutconnector/tests/*_test.php tests/*_test.php tests/security_boundaries.php; do
     case "$test" in
         *runtime_legacy_bootstrap*|*runtime_bootstrap*) continue ;;
-        *prestashop_source_snapshot_test.php|*customer_history_sql_test.php|*customer_price_sql_test.php|*customer_carts_sql_test.php)
+        *prestashop_source_snapshot_test.php|*customer_history_sql_test.php|*customer_price_sql_test.php|*customer_carts_sql_test.php|*history_index_sql_test.php)
             echo 'Native SQL tests run with their disposable database in test-source-sql.sh (PHP host and 7.4).'
             continue ;;
     esac
