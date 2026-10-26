@@ -39,6 +39,7 @@ for test in ["neurocheckoutconnector/tests/customer_price_protocol_test.php", "n
              "neurocheckoutconnector/tests/upgrade_467_test.php",
              "neurocheckoutconnector/tests/upgrade_468_test.php",
              "neurocheckoutconnector/tests/upgrade_469_test.php",
+             "neurocheckoutconnector/tests/upgrade_4613_test.php",
              "neurocheckoutconnector/tests/runtime_requirements_test.php",
              "neurocheckoutconnector/tests/snapshot_transaction_test.php"]:
     subprocess.run(["php", str(root / test)], cwd=root, check=True, timeout=60)
