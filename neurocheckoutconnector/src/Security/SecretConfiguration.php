@@ -55,6 +55,16 @@ class SecretConfiguration
         }
 
         $normalized = trim($value);
+        if ($key === 'NC_API_KEY') {
+            try {
+                $old = self::storedSecret(trim((string) Configuration::get($key)));
+                $incoming = self::storedSecret($normalized);
+                if ($old !== '' && $old !== $incoming) { self::preserveSourceStorageKeys(); }
+            } catch (\Throwable $error) {
+                self::log('Source storage key unavailable; API key change refused');
+                return false;
+            }
+        }
         if ($normalized === '') {
             return Configuration::updateValue($key, '');
         }
@@ -74,6 +84,59 @@ class SecretConfiguration
         }
 
         return Configuration::updateValue($key, self::PREFIX . $encrypted);
+    }
+
+    public static function sourceStorageSecret(array $configuration, string $directory): string
+    {
+        return \NeuroCheckout\Community\SourceStorageKey::resolve($directory, $configuration,
+            static function (string $plain): string {
+                $value = self::encrypt($plain);
+                if ($value === null) { throw new \RuntimeException('source_storage_key_unavailable'); }
+                return self::PREFIX . $value;
+            }, static function (string $value): string {
+                if (!self::hasPrefix($value, self::PREFIX)) { throw new \RuntimeException('source_storage_key_unavailable'); }
+                $plain = self::decrypt(substr($value, strlen(self::PREFIX)));
+                if ($plain === null) { throw new \RuntimeException('source_storage_key_unavailable'); }
+                return $plain;
+            });
+    }
+
+    private static function storedSecret(string $value): string
+    {
+        if (!self::hasPrefix($value, self::PREFIX)) { return $value; }
+        $plain = self::decrypt(substr($value, strlen(self::PREFIX)));
+        if ($plain === null) { throw new \RuntimeException('source_storage_key_unavailable'); }
+        return trim($plain);
+    }
+
+    private static function preserveSourceStorageKeys(): void
+    {
+        // A first installation has no source state to preserve yet.
+        if (!defined('_PS_ROOT_DIR_')) {
+            if ((string) Configuration::get('NC_SHOP_EXTERNAL_ID') !== '') { throw new \RuntimeException('source_storage_key_unavailable'); }
+            return;
+        }
+        $legacy = rtrim(defined('_PS_CACHE_DIR_') ? _PS_CACHE_DIR_ : sys_get_temp_dir(), '/\\') . '/neurocheckout-community-source';
+        $target = _PS_ROOT_DIR_ . '/var/neurocheckout-community-source';
+        if (!file_exists($target) && !is_link($target) && !file_exists($legacy) && !is_link($legacy)) { return; }
+        $directory = \NeuroCheckout\Community\PrestashopSourceDirectory::resolve(_PS_ROOT_DIR_, $legacy);
+        // Configuration updates may target one shop, a shop group or all shops.
+        $context = \Shop::getContext();
+        $ids = $context === \Shop::CONTEXT_SHOP ? [\Shop::getContextShopID()]
+            : \Shop::getShops(false, $context === \Shop::CONTEXT_GROUP ? \Shop::getContextShopGroupID() : null, true);
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            $shop = new \Shop($id);
+            $group = (int) $shop->id_shop_group;
+            if ($id < 1 || $group < 1) { throw new \RuntimeException('source_storage_key_unavailable'); }
+            $endpoint = (string) Configuration::get('NC_API_ENDPOINT', null, $group, $id);
+            $environment = \NeuroCheckout\Community\AutomaticSourceBinding::environment($endpoint);
+            $shopId = trim((string) Configuration::get('NC_SHOP_EXTERNAL_ID', null, $group, $id));
+            $apiKey = self::storedSecret(trim((string) Configuration::get('NC_API_KEY', null, $group, $id)));
+            if ($environment === null || $apiKey === '' || $shopId === '') { continue; }
+            self::sourceStorageSecret(['environment'=>$environment, 'platform'=>'prestashop', 'nativeScope'=>$id,
+                'shopId'=>$shopId, 'secret'=>\NeuroCheckout\Community\AutomaticSourceBinding::secret($apiKey, $shopId)], $directory);
+        }
     }
 
     public static function migrateKnownSecrets(): bool

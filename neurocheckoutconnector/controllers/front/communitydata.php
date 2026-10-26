@@ -52,7 +52,7 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
             (string) ($_SERVER['REQUEST_METHOD'] ?? ''), (string) ($_SERVER['REQUEST_URI'] ?? ''),
             SourcePullGateway::serverHeaders($_SERVER), $raw,
             Tools::usingSecureMode(),
-            static function (array $input, int $scope, array $configuration, string $directory) use ($raw): array {
+            static function (array $input, int $scope, array $configuration, string $directory) use ($raw, $automatic): array {
                 if (($input['operation'] ?? null)==='customer_history_index') {
                     return ['schema'=>1,'shopId'=>$input['shopId'],'operation'=>'customer_history_index',
                         'requestHash'=>hash('sha256',$raw),'index'=>PrestashopCustomerOrderHistory::fromRuntime($scope)->index($scope,$input)];
@@ -71,6 +71,9 @@ class NeuroCheckoutConnectorCommunitydataModuleFrontController extends ModuleFro
                     return ['schema' => 1, 'shopId' => $input['shopId'], 'operation' => 'customer_history',
                         'requestHash' => hash('sha256', $raw), 'history' => PrestashopCustomerOrderHistory::fromRuntime($scope)
                             ->read($scope, (int) $input['customerId'], $input['customerEmail'])];
+                }
+                if ($automatic !== null) {
+                    $configuration['secret'] = SecretConfiguration::sourceStorageSecret($configuration, $directory);
                 }
                 $exporter = new ReconciledSourceExporter($directory, $configuration, static function () use ($scope): array {
                     return PrestashopSourceSnapshot::fromRuntime()->capture($scope);
