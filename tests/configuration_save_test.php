@@ -16,6 +16,12 @@ namespace {
     if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
     define('_PS_VERSION_', '9.1.4');
     define('_COOKIE_KEY_', 'synthetic-configuration-test-key');
+    // A configured platform root without source snapshots models a first install.
+    $fixtureRoot = sys_get_temp_dir().'/nc-config-save-'.bin2hex(random_bytes(8));
+    mkdir($fixtureRoot, 0700);
+    define('_PS_ROOT_DIR_', $fixtureRoot);
+    define('_PS_CACHE_DIR_', $fixtureRoot.'/cache');
+    register_shutdown_function(static function () use ($fixtureRoot): void { rmdir($fixtureRoot); });
     class Configuration {
         public static array $values = [];
         public static string $fail = '';
