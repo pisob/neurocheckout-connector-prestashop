@@ -1,6 +1,6 @@
 # NeuroCheckout Connector for PrestaShop
 
-## API key rotation (next release)
+## API key rotation (4.6.13)
 
 Automatic Community synchronization now keeps its encrypted snapshot key separate
 from the API key used to authenticate requests. Existing snapshots are preserved
@@ -151,10 +151,10 @@ NeuroCheckout Community.
 
 ## Download
 
-The current installable connector is `v4.6.12`:
+The current installable connector is `v4.6.13`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.12/neurocheckoutconnector-prestashop-4.6.12.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.12)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.13/neurocheckoutconnector-prestashop-4.6.13.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.13)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
@@ -200,7 +200,7 @@ and the ZIP checksum reports `OK`.
    Migration requires the existing state; it cannot reconstruct deleted cursors.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.12.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.13.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store

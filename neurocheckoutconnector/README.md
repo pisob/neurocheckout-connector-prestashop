@@ -1,5 +1,12 @@
 # NeuroCheckout Connector for PrestaShop
 
+## API key rotation (4.6.13)
+
+Preserves encrypted synchronization state and cursors across API key rotation.
+Upgrade the existing module in place; keep its private source-state directory
+and the PrestaShop encryption configuration. This release does not reset data
+or recover snapshots whose original encryption key was already lost.
+
 ## Native history v2 (4.6.11)
 
 The signed account-history response adds nullable `discount_total` to every
