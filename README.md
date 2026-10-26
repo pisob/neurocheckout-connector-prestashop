@@ -1,5 +1,12 @@
 # NeuroCheckout Connector for PrestaShop
 
+## Selected variant images (4.6.14)
+
+Community product snapshots include the native image of each combination, scoped
+to the selected shop. Compatible Cloud email rendering uses the selected cart
+combination's picture and retains the product cover when no variant image exists.
+Updating preserves credentials, queued events and synchronization state.
+
 ## API key rotation (4.6.13)
 
 Automatic Community synchronization now keeps its encrypted snapshot key separate
@@ -151,10 +158,10 @@ NeuroCheckout Community.
 
 ## Download
 
-The current installable connector is `v4.6.13`:
+The current installable connector is `v4.6.14`:
 
-- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.13/neurocheckoutconnector-prestashop-4.6.13.zip)
-- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.13)
+- [Download the installable module ZIP](https://github.com/pisob/neurocheckout-connector-prestashop/releases/download/v4.6.14/neurocheckoutconnector-prestashop-4.6.14.zip)
+- [View the official release and verification files](https://github.com/pisob/neurocheckout-connector-prestashop/releases/tag/v4.6.14)
 
 Do not use **Code → Download ZIP**. That archive contains the complete source
 repository and is not an installable PrestaShop module. Do not extract the
@@ -200,7 +207,7 @@ and the ZIP checksum reports `OK`.
    Migration requires the existing state; it cannot reconstruct deleted cursors.
 2. Open **Modules → Module Manager** in the PrestaShop back office.
 3. Select **Upload a module**.
-4. Upload `neurocheckoutconnector-prestashop-4.6.13.zip` without
+4. Upload `neurocheckoutconnector-prestashop-4.6.14.zip` without
    extracting it.
 5. Wait for installation to finish, then select **Configure**.
 6. Enter the API endpoint, store-specific connector key and exact external store

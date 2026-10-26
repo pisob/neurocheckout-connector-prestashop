@@ -53,6 +53,7 @@ try {
         'image_shop' => 'id_image INT, id_shop INT, cover INT',
         'product_attribute' => 'id_product_attribute INT PRIMARY KEY, id_product INT, reference VARCHAR(64)',
         'product_attribute_shop' => 'id_product_attribute INT, id_shop INT, price DECIMAL(20,6), default_on INT',
+        'product_attribute_image' => 'id_product_attribute INT, id_image INT, PRIMARY KEY(id_product_attribute,id_image)',
         'stock_available' => 'id_product INT, id_product_attribute INT, id_shop INT, id_shop_group INT, quantity INT, out_of_stock INT',
         'category_product' => 'id_product INT, id_category INT',
         'cart' => 'id_cart INT PRIMARY KEY, id_shop INT, id_customer INT, id_lang INT, id_currency INT, date_add DATETIME, date_upd DATETIME',
@@ -64,12 +65,13 @@ try {
     foreach ([
         "INSERT INTO ps_shop VALUES (1,1,1),(2,2,1)",
         "INSERT INTO ps_product VALUES (10,'SHARED'),(20,'OTHER')",
-        "INSERT INTO ps_image VALUES (70,10,1),(71,10,2)",
-        "INSERT INTO ps_image_shop VALUES (71,1,1),(70,2,1)",
+        "INSERT INTO ps_image VALUES (70,10,1),(71,10,2),(72,10,3),(73,10,3),(74,20,0)",
+        "INSERT INTO ps_image_shop VALUES (71,1,1),(70,2,1),(72,1,0),(73,1,0),(74,1,0)",
         "INSERT INTO ps_product_shop VALUES (10,1,1,39.9,1,3),(10,2,1,999,1,4),(20,2,1,100,1,4)",
         "INSERT INTO ps_product_lang VALUES (10,1,1,'Produit été','produit-ete','Description'),(10,2,1,'Other store','other','Other description')",
         "INSERT INTO ps_product_attribute VALUES (100,10,'VARIANT')",
         "INSERT INTO ps_product_attribute_shop VALUES (100,1,5,1),(100,2,777,1)",
+        "INSERT INTO ps_product_attribute_image VALUES (100,70),(100,72),(100,73),(100,74)",
         "INSERT INTO ps_stock_available VALUES (10,100,1,0,7,0),(10,100,0,1,8,0),(10,100,2,0,999,0),(10,100,0,2,999,0)",
         "INSERT INTO ps_category_product VALUES (10,3)",
         "INSERT INTO ps_customer(id_customer,email,firstname,lastname,is_guest) VALUES (1,'fixture@example.invalid','Test','Only',0),(2,'other@example.invalid','Other','Store',1)",
@@ -85,11 +87,19 @@ try {
     expectSnapshot($snapshot[0]['payload']['translations'][0]['name'] === 'Produit été', 'selected shop language');
     expectSnapshot((float) $snapshot[0]['payload']['price_tax_excl'] === 39.9, 'selected shop price');
     expectSnapshot(count($snapshot[0]['payload']['variants']) === 1 && (float) $snapshot[0]['payload']['variants'][0]['price_impact_tax_excl'] === 5.0, 'selected shop variants');
+    expectSnapshot((int) $snapshot[0]['payload']['variants'][0]['cover_image_id'] === 72,
+        'variant image differs from cover, excludes foreign shop/product and uses native position then image ID');
+    expectSnapshot((int) $reader->capture(2)[0]['payload']['variants'][0]['cover_image_id'] === 70,
+        'shared combination uses the image associated with the selected shop');
+    $writer->exec('DELETE FROM ps_product_attribute_image WHERE id_product_attribute=100');
+    expectSnapshot($reader->capture(1)[0]['payload']['variants'][0]['cover_image_id'] === null,
+        'variant without image does not invent an image ID');
+    $writer->exec('INSERT INTO ps_product_attribute_image VALUES (100,72)');
     expectSnapshot(count($snapshot[0]['payload']['stocks']) === 2, 'own stock and shared own-group stock only');
     expectSnapshot($snapshot[1]['payload']['status'] === 'active' && $snapshot[1]['payload']['email'] === 'fixture@example.invalid', 'active own cart');
     expectSnapshot(strpos(json_encode($snapshot), 'other@example.invalid') === false, 'no foreign customer');
     expectSnapshot(!$readerPDO->inTransaction(), 'read transaction closed');
-    expectSnapshot($readerPDO->startedWithPdo === 1, 'PDO tracks snapshot transaction on PHP 7.4');
+    expectSnapshot($readerPDO->startedWithPdo === 3, 'PDO tracks snapshot transactions on PHP 7.4');
     expectSnapshot((int) $snapshot[1]['payload']['customer_is_guest'] === 0, 'registered customer exported');
     expectSnapshot($snapshot[1]['payload']['marketing_consent']['state'] === 'denied', 'native newsletter false stays denied');
     $writer->exec('UPDATE ps_customer SET newsletter=1 WHERE id_customer=1');

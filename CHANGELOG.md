@@ -1,3 +1,9 @@
+## 4.6.14
+
+- Export shop-scoped combination images so Community emails can show the selected variant.
+- Preserve the product cover fallback for variants without a specific picture.
+- Keep credentials, queues and encrypted source snapshots during in-place upgrades.
+
 ## 4.6.12
 
 - Add signed, bounded native account discovery for initial and weekly local history synchronization.

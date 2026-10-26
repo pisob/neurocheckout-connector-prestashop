@@ -1,5 +1,12 @@
 # NeuroCheckout Connector for PrestaShop
 
+## Selected variant images (4.6.14)
+
+Community product snapshots include the native image of each combination, scoped
+to the selected shop. Compatible Cloud email rendering uses the selected cart
+combination's picture and retains the product cover when no variant image exists.
+Updating preserves credentials, queued events and synchronization state.
+
 ## API key rotation (4.6.13)
 
 Preserves encrypted synchronization state and cursors across API key rotation.

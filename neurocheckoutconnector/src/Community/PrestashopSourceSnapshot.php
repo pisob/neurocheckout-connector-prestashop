@@ -15,7 +15,7 @@ final class PrestashopSourceSnapshot
     private float $started = 0;
     private $amountReader;
     private const TABLES = ['shop', 'product', 'product_shop', 'product_lang', 'image', 'image_shop', 'product_attribute',
-        'product_attribute_shop', 'stock_available', 'category_product', 'cart', 'cart_product', 'customer', 'currency', 'orders'];
+        'product_attribute_shop', 'product_attribute_image', 'stock_available', 'category_product', 'cart', 'cart_product', 'customer', 'currency', 'orders'];
 
     public function __construct(PDO $connection, string $prefix, ?callable $amountReader = null)
     {
@@ -101,8 +101,15 @@ final class PrestashopSourceSnapshot
                 if ($coverImages) {
                     $product['cover_image_id'] = (int) $coverImages[0]['id_image'];
                 }
+                // A combination may have a different picture from the product
+                // cover. Keep the first native combination image in this shop;
+                // no association means the consumer can retain the product cover.
                 $product['variants'] = $this->rows('SELECT pa.id_product_attribute, pa.reference, pas.price AS price_impact_tax_excl,
-                    pas.default_on FROM ' . $this->table('product_attribute') . ' pa JOIN ' . $this->table('product_attribute_shop')
+                    pas.default_on, (SELECT i.id_image FROM ' . $this->table('product_attribute_image') . ' pai
+                        JOIN ' . $this->table('image') . ' i ON i.id_image=pai.id_image AND i.id_product=pa.id_product
+                        JOIN ' . $this->table('image_shop') . ' ims ON ims.id_image=i.id_image AND ims.id_shop=pas.id_shop
+                        WHERE pai.id_product_attribute=pa.id_product_attribute ORDER BY i.position, i.id_image LIMIT 1) AS cover_image_id
+                    FROM ' . $this->table('product_attribute') . ' pa JOIN ' . $this->table('product_attribute_shop')
                     . ' pas ON pas.id_product_attribute=pa.id_product_attribute WHERE pa.id_product=? AND pas.id_shop=? ORDER BY pa.id_product_attribute', [$id, $scope], 128);
                 $product['stocks'] = $this->rows('SELECT id_product_attribute, id_shop, id_shop_group, quantity, out_of_stock FROM '
                     . $this->table('stock_available') . ' WHERE id_product=? AND (id_shop=? OR (id_shop=0 AND id_shop_group=?))
